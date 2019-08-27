@@ -7,11 +7,12 @@ unsigned long sendTimer = millis();
 uint16_t id = 0;
 
 
-lora2mqtt_t * m = lora2mqtt_new();
+#define MAX_PAYLOAD_LENGTH 255
 uint16_t headLen = 0;
 uint8_t payload[256];
+lora2mqtt_t * m = lora2mqtt_new();
 
-#define MAX_PAYLOAD_LENGTH 255
+uint8_t hello[20] = "{\"temperature\": 30}";
 
 void setup() {
   // put your setup code here, to run once:
@@ -40,6 +41,14 @@ void loop() {
                     Serial.write('\n');
                 }
 
+                if (m -> type == REQUEST) {
+                    lora2mqtt_set_type(m, RESPONSE);
+                    lora2mqtt_set_data(m, m -> data, m -> length - packetTypeLength);
+                    if (sendTimer + 10000 > millis()) {
+                        delay(sendTimer + 10000 - millis());
+                    }
+                    send_packet();
+                }
             }
             headLen = 0;
         }
@@ -54,19 +63,23 @@ void loop() {
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
-        char hello[20] = "{\"temperature\": 30}";
-        lora2mqtt_set_data(m, (uint8_t *)&hello, 19);
-        lora2mqtt_to_binary(m, payload);
-        uint16_t length = lora2mqtt_get_length(m);
-        for (uint16_t i = 0; i < length; i ++) {
-            Serial.write(payload[i]);
-            Serial1.write(payload[i]);
-        }
-        Serial1.write('\r');
-        Serial1.write('\n');
-        Serial.write('\r');
-        Serial.write('\n');
-        sendTimer = millis();
+        lora2mqtt_set_data(m, hello, 19);
+        send_packet();
         id ++;
     }
+}
+
+void send_packet() {
+    Serial.println((char *)m->data);
+    lora2mqtt_to_binary(m, payload);
+    uint16_t length = lora2mqtt_get_length(m);
+    for (uint16_t i = 0; i < length; i ++) {
+        Serial.write(payload[i]);
+        Serial1.write(payload[i]);
+    }
+    Serial1.write('\r');
+    Serial1.write('\n');
+    Serial.write('\r');
+    Serial.write('\n');
+    sendTimer = millis();
 }

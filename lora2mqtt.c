@@ -36,23 +36,20 @@ void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload) {
     payload[headerLength - 1] = crcl;
 }
 
-bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, uint16_t length) {
+bool lora2mqtt_from_binary(lora2mqtt_t * m, uint8_t * payload, uint16_t length) {
     if (length < headerLength + 1) {
         return false;
     }
 
-    uint8_t * data = malloc(length);
-    memcpy(data, payload, length);
+    swap_edition(payload);
 
-    swap_edition(data);
+    memcpy((uint8_t *)m, payload, headerLength + 1);
 
-    memcpy((uint8_t *)m, data, headerLength + 1);
+    swap_edition(payload);
 
     if (m -> length > 1) {
-        memcpy(m->data, data + headerLength + 1, length - headerLength - 1);
+        memcpy(m->data, payload + headerLength + 1, length - headerLength - 1);
     }
-
-    free(data);
 
     return true;
 }
@@ -121,23 +118,22 @@ bool lora2mqtt_discover_magic(const uint8_t * payload, uint16_t length) {
     return false;
 }
 
-bool lora2mqtt_check_crc16(const uint8_t * payload, uint16_t length) {
+bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
     if (length < headerLength + 1) {
         return false;
     }
-    uint8_t * data = malloc(length + 1);
-    memcpy(data, payload, length);
 
-    uint8_t crch = data[headerLength - 2];
-    uint8_t crcl = data[headerLength - 1];
+    uint8_t crch = payload[headerLength - 2];
+    uint8_t crcl = payload[headerLength - 1];
     uint16_t crc0 = crch * 256 + crcl;
 
-    data[headerLength - 2] = 0x00;
-    data[headerLength - 1] = 0x00;
+    payload[headerLength - 2] = 0x00;
+    payload[headerLength - 1] = 0x00;
 
-    uint16_t crc = crc_16(data, length);
+    uint16_t crc = crc_16(payload, length);
 
-    free(data);
+    payload[headerLength - 2] = crch;
+    payload[headerLength - 1] = crcl;
 
     return crc == crc0;
 }

@@ -45,7 +45,7 @@ void lora2mqtt_set_type(lora2mqtt_t * m, uint8_t type);
 void lora2mqtt_set_data(lora2mqtt_t * m, uint8_t * data, uint16_t length);
 
 void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload);
-bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, uint16_t length);
+bool lora2mqtt_from_binary(lora2mqtt_t * m, uint8_t * payload, uint16_t length);
 
 uint16_t lora2mqtt_get_length(const lora2mqtt_t *m);
 
