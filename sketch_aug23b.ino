@@ -29,13 +29,13 @@ void loop() {
 
     if (Serial1.available() > 0) {
         outByte = Serial1.read();
-        if (lora2mqtt_recv(payload, &headLen, (uint8_t)outByte)) {
+        if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
                 Serial.print("\nGet Type: ");
                 Serial.println(m -> type);
-                if (m -> length > packetTypeLength) {
+                if (m -> length > TYPE_LENGTH) {
                     Serial.print("Get Data: ");
-                    for (uint16_t i = 0; i < m -> length - packetTypeLength; i ++) {
+                    for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
                         Serial.write(m -> data[i]);
                     }
                     Serial.write('\n');
@@ -43,10 +43,7 @@ void loop() {
 
                 if (m -> type == REQUEST) {
                     lora2mqtt_set_type(m, RESPONSE);
-                    lora2mqtt_set_data(m, m -> data, m -> length - packetTypeLength);
-                    if (sendTimer + 10000 > millis()) {
-                        delay(sendTimer + 10000 - millis());
-                    }
+                    lora2mqtt_set_data(m, m -> data, m -> length - TYPE_LENGTH);
                     send_packet();
                 }
             }

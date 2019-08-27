@@ -34,9 +34,11 @@ typedef struct {
     uint8_t  data[0];
 } __attribute__ ((packed)) lora2mqtt_t;
 
-#define magicLength 4
-#define headerLength 4 + 10 + 16 + 2 + 2 + 2
-#define packetTypeLength 1
+#define MAGIC_LENGTH 4
+#define KEY_LENGTH 10
+#define TOKEN_LENGTH 16
+#define HEADER_LENGTH MAGIC_LENGTH + KEY_LENGTH + TOKEN_LENGTH + 2 + 2 + 2
+#define TYPE_LENGTH 1
 
 lora2mqtt_t * lora2mqtt_new();
 void lora2mqtt_reset(lora2mqtt_t * m);
