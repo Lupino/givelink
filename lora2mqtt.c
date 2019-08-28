@@ -3,6 +3,22 @@
 #include "lora2mqtt.h"
 #include <string.h>
 
+uint8_t *key;
+uint8_t *token;
+bool lora2mqtt_inited = false;
+
+void lora2mqtt_init() {
+    key = (uint8_t *)malloc(10);
+    token = (uint8_t *)malloc(16);
+    memcpy(key, (uint8_t *)unhex((const uint8_t *)KEY, 20), 10);
+    memcpy(token, (uint8_t *)unhex((const uint8_t *)TOKEN, 32), 16);
+    lora2mqtt_inited = true;
+}
+
+uint16_t to_uint16(uint8_t h, uint8_t l) {
+    return ((h * 256) & 0xff00) + (l & 0xff);
+}
+
 void swap_one(uint8_t * payload, int offset) {
     uint8_t tmp;
     tmp = payload[offset];
@@ -29,8 +45,8 @@ void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload) {
     lora2mqtt_to_binary_raw(m, payload);
     uint16_t crc = crc_16(payload, lora2mqtt_get_length(m));
 
-    uint8_t crch = crc / 256;
-    uint8_t crcl = crc % 256;
+    uint8_t crch = (uint8_t)(crc >> 8);
+    uint8_t crcl = (uint8_t)crc;
 
     payload[HEADER_LENGTH - 2] = crch;
     payload[HEADER_LENGTH - 1] = crcl;
@@ -44,17 +60,17 @@ bool lora2mqtt_from_binary(lora2mqtt_t * m, uint8_t * payload, uint16_t length) 
     uint8_t idh = payload[HEADER_LENGTH - 2 - 2 - 2];
     uint8_t idl = payload[HEADER_LENGTH - 2 - 2 - 1];
 
-    m -> id = idh * 256 + idl;
+    m -> id = to_uint16(idh, idl);
 
     uint8_t lenh = payload[HEADER_LENGTH - 2 - 2];
     uint8_t lenl = payload[HEADER_LENGTH - 2 - 1];
 
-    m -> length = lenh * 256 + lenl;
+    m -> length = to_uint16(lenh, lenl);
 
     uint8_t crch = payload[HEADER_LENGTH - 2];
     uint8_t crcl = payload[HEADER_LENGTH - 1];
 
-    m -> crc16 = crch * 256 + crcl;
+    m -> crc16 = to_uint16(crch, crcl);
 
     m -> type = payload[HEADER_LENGTH];
 
@@ -75,14 +91,17 @@ uint16_t lora2mqtt_get_data_length(const uint8_t * payload, uint16_t length) {
     }
     uint8_t lenh = payload[HEADER_LENGTH - 2 - 2];
     uint8_t lenl = payload[HEADER_LENGTH - 2 - 1];
-    return lenh * 256 + lenl;
+    return to_uint16(lenh, lenl);
 }
 
 lora2mqtt_t * lora2mqtt_new() {
-    lora2mqtt_t * m = malloc(HEADER_LENGTH + 1);
+    if (!lora2mqtt_inited) {
+        lora2mqtt_init();
+    }
+    lora2mqtt_t * m = (lora2mqtt_t *)malloc(HEADER_LENGTH + 1);
     memcpy(m -> magic, (uint8_t *)LMQ0, 4);
-    memcpy(m -> key, (uint8_t *)unhex((const uint8_t *)KEY, 20), 10);
-    memcpy(m -> token, (uint8_t *)unhex((const uint8_t *)TOKEN, 32), 16);
+    memcpy(m -> key, key, 10);
+    memcpy(m -> token, token, 16);
     m -> id = 0;
     m -> length = 1;
     m -> crc16 = 0;
@@ -136,7 +155,7 @@ bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
 
     uint8_t crch = payload[HEADER_LENGTH - 2];
     uint8_t crcl = payload[HEADER_LENGTH - 1];
-    uint16_t crc0 = crch * 256 + crcl;
+    uint16_t crc0 = to_uint16(crch, crcl);
 
     payload[HEADER_LENGTH - 2] = 0x00;
     payload[HEADER_LENGTH - 1] = 0x00;
@@ -153,7 +172,6 @@ bool lora2mqtt_check_key(const uint8_t * payload, uint16_t length) {
     if (length < HEADER_LENGTH + 1) {
         return false;
     }
-    uint8_t * key = (uint8_t *)unhex((const uint8_t *)KEY, 20);
 
     for (uint16_t i = 0; i < 10; i ++) {
         if (key[i] != payload[i + 4]) {
@@ -167,7 +185,6 @@ bool lora2mqtt_check_token(const uint8_t * payload, uint16_t length) {
     if (length < HEADER_LENGTH + 1) {
         return false;
     }
-    uint8_t * token = (uint8_t *)unhex((const uint8_t *)TOKEN, 32);
 
     for (uint16_t i = 0; i < 16; i ++) {
         if (token[i] != payload[i + 4 + 10]) {
@@ -175,6 +192,12 @@ bool lora2mqtt_check_token(const uint8_t * payload, uint16_t length) {
         }
     }
     return true;
+}
+
+void shift_data(uint8_t * payload, uint16_t length) {
+    for (uint16_t i = 0; i < length - 1; i ++) {
+        payload[i] = payload[i + 1];
+    }
 }
 
 bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
@@ -198,10 +221,8 @@ bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
         }
     } else {
         if (headLen >= 4) {
-            payload[0] = payload[headLen - 3];
-            payload[1] = payload[headLen - 2];
-            payload[2] = payload[headLen - 1];
-            headLen = 3;
+            shift_data(payload, headLen);
+            headLen -= 1;
         }
     }
 
