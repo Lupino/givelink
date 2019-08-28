@@ -19,6 +19,11 @@ uint16_t to_uint16(uint8_t h, uint8_t l) {
     return ((h * 256) & 0xff00) + (l & 0xff);
 }
 
+void from_uint16(uint16_t src, uint8_t *h, uint8_t *l) {
+    *h = (uint8_t)(src >> 8);
+    *l = (uint8_t)src;
+}
+
 void swap_one(uint8_t * payload, int offset) {
     uint8_t tmp;
     tmp = payload[offset];
@@ -43,10 +48,16 @@ void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload) {
     }
     m -> crc16 = 0;
     lora2mqtt_to_binary_raw(m, payload);
+
+    payload[HEADER_LENGTH - 2] = 0;
+    payload[HEADER_LENGTH - 1] = 0;
+
     uint16_t crc = crc_16(payload, lora2mqtt_get_length(m));
 
-    uint8_t crch = (uint8_t)(crc >> 8);
-    uint8_t crcl = (uint8_t)crc;
+    uint8_t crch;
+    uint8_t crcl;
+
+    from_uint16(crc, &crch, &crcl);
 
     payload[HEADER_LENGTH - 2] = crch;
     payload[HEADER_LENGTH - 1] = crcl;
