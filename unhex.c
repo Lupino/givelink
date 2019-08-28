@@ -17,7 +17,7 @@ char decode(char x) {              /* Function to decode a hex character */
 unsigned char * unhex(const unsigned char * x, int length) {
   unsigned char *data = malloc(length / 2 + 1);
   for (int i = 0; i < length; i = i + 2) {
-    data[i / 2] = ((decode(x[i]) * 16) & 0xF0) + (decode(x[i+1]) & 0xF);
+    data[i / 2] = ((decode(x[i]) << 4) & 0xF0) + (decode(x[i+1]) & 0xF);
   }
 
   return data;

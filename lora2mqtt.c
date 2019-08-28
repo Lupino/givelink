@@ -15,8 +15,8 @@ void lora2mqtt_init() {
     lora2mqtt_inited = true;
 }
 
-uint16_t to_uint16(uint8_t h, uint8_t l) {
-    return ((h * 256) & 0xff00) + (l & 0xff);
+uint16_t to_uint16(const uint8_t h, const uint8_t l) {
+    return ((h << 8) & 0xff00) + (l & 0xff);
 }
 
 void from_uint16(uint16_t src, uint8_t *h, uint8_t *l) {
