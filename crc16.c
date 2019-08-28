@@ -1,6 +1,14 @@
 #include "crc16.h"
 
-uint16_t crc_tab16[256] = {
+#if !defined(__SAM3X8E__)
+#if defined(__AVR__ ) || defined(__IMXRT1052__) || defined(__IMXRT1062__) || defined(ARDUINO_ARCH_STM32F1)
+#include <avr/pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
+#endif
+
+const uint16_t crc_tab16[256] PROGMEM = {
     0x0000, 0xc0c1, 0xc181, 0x0140
   , 0xc301, 0x03c0, 0x0280, 0xc241
   , 0xc601, 0x06c0, 0x0780, 0xc741
