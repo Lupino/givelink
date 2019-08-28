@@ -24,7 +24,7 @@ void from_uint16(uint16_t src, uint8_t *h, uint8_t *l) {
     *l = (uint8_t)src;
 }
 
-void swap_one(uint8_t * payload, int offset) {
+void swap_one(uint8_t * payload, const int offset) {
     uint8_t tmp;
     tmp = payload[offset];
     payload[offset] = payload[offset + 1];
@@ -42,11 +42,7 @@ void lora2mqtt_to_binary_raw(const lora2mqtt_t * m, uint8_t * payload) {
     swap_edition(payload);
 }
 
-void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload) {
-    if (m -> length < TYPE_LENGTH) {
-        m -> length = TYPE_LENGTH;
-    }
-    m -> crc16 = 0;
+void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
     lora2mqtt_to_binary_raw(m, payload);
 
     payload[HEADER_LENGTH - 2] = 0;
@@ -63,7 +59,7 @@ void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload) {
     payload[HEADER_LENGTH - 1] = crcl;
 }
 
-bool lora2mqtt_from_binary(lora2mqtt_t * m, uint8_t * payload, uint16_t length) {
+bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, const uint16_t length) {
     if (length < HEADER_LENGTH + TYPE_LENGTH) {
         return false;
     }
@@ -96,7 +92,7 @@ uint16_t lora2mqtt_get_length(const lora2mqtt_t *m) {
     return m -> length + HEADER_LENGTH;
 }
 
-uint16_t lora2mqtt_get_data_length(const uint8_t * payload, uint16_t length) {
+uint16_t lora2mqtt_get_data_length(const uint8_t * payload, const uint16_t length) {
     if (length < HEADER_LENGTH) {
         return 0;
     }
@@ -133,21 +129,21 @@ void lora2mqtt_free(lora2mqtt_t * m) {
     }
 }
 
-void lora2mqtt_set_id(lora2mqtt_t * m, uint16_t id) {
+void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id) {
     m->id = id;
 }
 
-void lora2mqtt_set_type(lora2mqtt_t * m, uint8_t type) {
+void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type) {
     m->type = type;
     m->length = TYPE_LENGTH;
 }
 
-void lora2mqtt_set_data(lora2mqtt_t * m, uint8_t * data, uint16_t length) {
+void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data, const uint16_t length) {
     memcpy(m->data, data, length);
     m->length = TYPE_LENGTH + length;
 }
 
-bool lora2mqtt_discover_magic(const uint8_t * payload, uint16_t length) {
+bool lora2mqtt_discover_magic(const uint8_t * payload, const uint16_t length) {
     if (length < MAGIC_LENGTH) {
         return false;
     }
@@ -180,7 +176,7 @@ bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
     return crc == crc0;
 }
 
-bool lora2mqtt_check_key(const uint8_t * payload, uint16_t length) {
+bool lora2mqtt_check_key(const uint8_t * payload, const uint16_t length) {
     if (length < HEADER_LENGTH + 1) {
         return false;
     }
@@ -193,7 +189,7 @@ bool lora2mqtt_check_key(const uint8_t * payload, uint16_t length) {
     return true;
 }
 
-bool lora2mqtt_check_token(const uint8_t * payload, uint16_t length) {
+bool lora2mqtt_check_token(const uint8_t * payload, const uint16_t length) {
     if (length < HEADER_LENGTH + 1) {
         return false;
     }

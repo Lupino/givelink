@@ -42,17 +42,17 @@ typedef struct {
 
 lora2mqtt_t * lora2mqtt_new();
 void lora2mqtt_reset(lora2mqtt_t * m);
-void lora2mqtt_set_id(lora2mqtt_t * m, uint16_t id);
-void lora2mqtt_set_type(lora2mqtt_t * m, uint8_t type);
-void lora2mqtt_set_data(lora2mqtt_t * m, uint8_t * data, uint16_t length);
+void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id);
+void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type);
+void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data, const uint16_t length);
 
-void lora2mqtt_to_binary(lora2mqtt_t * m, uint8_t * payload);
-bool lora2mqtt_from_binary(lora2mqtt_t * m, uint8_t * payload, uint16_t length);
+void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload);
+bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, const uint16_t length);
 
 uint16_t lora2mqtt_get_length(const lora2mqtt_t *m);
 
 void lora2mqtt_free(lora2mqtt_t * m);
-bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c);
+bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
 
 #ifdef __cplusplus
 }
