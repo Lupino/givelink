@@ -95,7 +95,7 @@ uint16_t crc_16( const unsigned char *input_str, size_t num_bytes ) {
 
   if ( ptr != NULL ) for (a=0; a<num_bytes; a++) {
 
-    crc = (crc >> 8) ^ crc_tab16[ (crc ^ (uint16_t) *ptr++) & 0x00FF ];
+    crc = (crc >> 8) ^ pgm_read_word(&crc_tab16[ (crc ^ (uint16_t) *ptr++) & 0x00FF ]);
   }
 
   return crc;
