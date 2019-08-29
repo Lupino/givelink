@@ -1,5 +1,11 @@
 #include "lora2mqtt.h"
 
+// https://github.com/adafruit/DHT-sensor-library.git
+#include <DHT.h>
+
+// https://github.com/bblanchon/ArduinoJson.git
+#include <ArduinoJson.h>
+
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
@@ -13,14 +19,27 @@ uint8_t payload[128];
 uint8_t payloadSend[128];
 lora2mqtt_t * m = lora2mqtt_new();
 
-uint8_t hello[20] = "{\"temperature\": 30}";
+// uint8_t hello[20] = "{\"temperature\": 30}";
 
 #define DEBUG 1
 
+#define DHTPIN 9     // what digital pin we're connected to
+
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11   // DHT 11
+// #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+// #define DHTTYPE DHT21   // DHT 21 (AM2301)
+
+DHT dht(DHTPIN, DHTTYPE);
+
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200);
-  while (!Serial) {;}
+    // put your setup code here, to run once:
+    Serial.begin(115200);
+    while (!Serial) {;}
+    #if DEBUG
+    Serial.println("Setup");
+    #endif
+    dht.begin();
 }
 
 void loop() {
@@ -61,12 +80,7 @@ void loop() {
     }
 
     if (sendTimer + 10000 < millis()) {
-        lora2mqtt_reset(m);
-        lora2mqtt_set_id(m, id);
-        lora2mqtt_set_type(m, TELEMETRY);
-        lora2mqtt_set_data(m, hello, 19);
-        send_packet();
-        id ++;
+        read_dht();
     }
 }
 
@@ -92,4 +106,48 @@ void send_packet() {
     Serial.write('\r');
     Serial.write('\n');
     sendTimer = millis();
+}
+
+void read_dht() {
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+    // // Read temperature as Fahrenheit (isFahrenheit = true)
+    // float f = dht.readTemperature(true);
+
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(h) || isnan(t) /*|| isnan(f) */) {
+        #if DEBUG
+        Serial.println("Failed to read from DHT sensor!");
+        #endif
+        sendTimer = millis();
+        return;
+    }
+
+    // // Compute heat index in Fahrenheit (the default)
+    // float hif = dht.computeHeatIndex(f, h);
+    // // Compute heat index in Celsius (isFahreheit = false)
+    // float hic = dht.computeHeatIndex(t, h, false);
+
+    DynamicJsonDocument jsonData(50);
+    char jsonPayload[50];
+
+    jsonData["humidity"] = h;
+    jsonData["temperature"] = t;
+
+    serializeJson(jsonData, jsonPayload);
+
+    uint16_t length = strlen(jsonPayload);
+
+    lora2mqtt_reset(m);
+    lora2mqtt_set_id(m, id);
+    id ++;
+    lora2mqtt_set_type(m, TELEMETRY);
+    lora2mqtt_set_data(m, (const uint8_t* )jsonPayload, length);
+    send_packet();
+    #if DEBUG
+    Serial.println("DHT sensor data sended!");
+    #endif
 }
