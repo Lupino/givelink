@@ -32,6 +32,9 @@ lora2mqtt_t * m = lora2mqtt_new();
 
 DHT dht(DHTPIN, DHTTYPE);
 
+StaticJsonDocument<50> jsonData;
+char jsonPayload[50];
+
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(115200);
@@ -130,9 +133,6 @@ void read_dht() {
     // float hif = dht.computeHeatIndex(f, h);
     // // Compute heat index in Celsius (isFahreheit = false)
     // float hic = dht.computeHeatIndex(t, h, false);
-
-    DynamicJsonDocument jsonData(50);
-    char jsonPayload[50];
 
     jsonData["humidity"] = h;
     jsonData["temperature"] = t;
