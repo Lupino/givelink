@@ -18,21 +18,16 @@ uint8_t hello[20] = "{\"temperature\": 30}";
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial1.begin(115200);
   while (!Serial) {;}
 }
 
 void loop() {
-    if (Serial.available() > 0) {
-        inByte = Serial.read();
-        Serial.write(inByte);
-    }
 
-    if (Serial1.available() > 0) {
-        outByte = Serial1.read();
+    if (Serial.available() > 0) {
+        outByte = Serial.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
-                Serial.print("Get Id: ");
+                Serial.print("Recv Id: ");
                 Serial.print(m -> id);
                 Serial.print(" Type: ");
                 Serial.print(m -> type);
@@ -45,8 +40,9 @@ void loop() {
                 Serial.println("");
 
                 if (m -> type == REQUEST) {
+                    uint16_t length = m -> length - TYPE_LENGTH;
                     lora2mqtt_set_type(m, RESPONSE);
-                    lora2mqtt_set_data(m, m -> data, m -> length - TYPE_LENGTH);
+                    lora2mqtt_set_data(m, m -> data, length);
                     send_packet();
                 }
             }
@@ -69,12 +65,23 @@ void loop() {
 }
 
 void send_packet() {
+    Serial.print("Send Id: ");
+    Serial.print(m -> id);
+    Serial.print(" Type: ");
+    Serial.print(m -> type);
+    if (m -> length > TYPE_LENGTH) {
+        Serial.print(" Data: ");
+        for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
+            Serial.write(m -> data[i]);
+        }
+    }
+    Serial.println("");
     lora2mqtt_to_binary(m, payloadSend);
     uint16_t length = lora2mqtt_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {
-        Serial1.write(payloadSend[i]);
+        Serial.write(payloadSend[i]);
     }
-    Serial1.write('\r');
-    Serial1.write('\n');
+    Serial.write('\r');
+    Serial.write('\n');
     sendTimer = millis();
 }
