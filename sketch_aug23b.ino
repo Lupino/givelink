@@ -15,6 +15,8 @@ lora2mqtt_t * m = lora2mqtt_new();
 
 uint8_t hello[20] = "{\"temperature\": 30}";
 
+#define DEBUG 1
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -27,6 +29,7 @@ void loop() {
         outByte = Serial.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
+                #if DEBUG
                 Serial.print("Recv Id: ");
                 Serial.print(m -> id);
                 Serial.print(" Type: ");
@@ -38,6 +41,7 @@ void loop() {
                     }
                 }
                 Serial.println("");
+                #endif
 
                 if (m -> type == REQUEST) {
                     uint16_t length = m -> length - TYPE_LENGTH;
@@ -49,7 +53,9 @@ void loop() {
             headLen = 0;
         }
         if (headLen > MAX_PAYLOAD_LENGTH) {
+            #if DEBUG
             Serial.println("Error: payload to large");
+            #endif
             headLen = 0;
         }
     }
@@ -65,6 +71,7 @@ void loop() {
 }
 
 void send_packet() {
+    #if DEBUG
     Serial.print("Send Id: ");
     Serial.print(m -> id);
     Serial.print(" Type: ");
@@ -76,6 +83,7 @@ void send_packet() {
         }
     }
     Serial.println("");
+    #endif
     lora2mqtt_to_binary(m, payloadSend);
     uint16_t length = lora2mqtt_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {
