@@ -9,7 +9,7 @@ char decode(char x) {              /* Function to decode a hex character */
   else if (x >= 'a' && x <= 'f')    /* a-f offset by hex 37 */
     return(x - 0x57);
   else {                            /* Otherwise, an illegal hex digit */
-    fprintf(stderr,"\nInput is not in legal hex format\n");
+    // fprintf(stderr,"\nInput is not in legal hex format\n");
     return 0;
   }
 }
