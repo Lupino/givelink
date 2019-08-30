@@ -87,7 +87,7 @@ void loop() {
                         if (strcmp("get_dht_value", method) == 0) {
                             read_dht();
                         } else {
-                            set_error(FC(F("not support")));
+                            set_error("not support");
                         }
                     }
                     send_packet();
