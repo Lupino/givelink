@@ -16,7 +16,7 @@ uint8_t payload[128];
 uint8_t payloadSend[128];
 lora2mqtt_t * m = lora2mqtt_new();
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define DHTPIN 9     // what digital pin we're connected to
 
