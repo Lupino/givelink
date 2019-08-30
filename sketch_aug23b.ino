@@ -3,9 +3,6 @@
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
 
-// https://github.com/bblanchon/ArduinoJson.git
-#include <ArduinoJson.h>
-
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
@@ -34,8 +31,6 @@ DHT dht(DHTPIN, DHTTYPE);
 char jsonPayload[JSON_LENGTH];
 uint16_t length;
 char * tpl = (char *)malloc(30);
-
-StaticJsonDocument<JSON_LENGTH> reqJsonData;
 
 void setup() {
     // put your setup code here, to run once:
@@ -72,24 +67,12 @@ void loop() {
                     m -> data[length] = '\0';
                     lora2mqtt_set_type(m, RESPONSE);
 
-                    // Deserialize the JSON document
-                    DeserializationError error = deserializeJson(reqJsonData, (char *)m -> data);
-
-                    // Test if parsing succeeds.
-                    if (error) {
-                        #if DEBUG
-                        Serial.print(F("deserializeJson() failed: "));
-                        Serial.println(error.c_str());
-                        #endif
-                        set_error(error.c_str());
+                    if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)m -> data) == 0) {
+                        read_dht();
                     } else {
-                        char * method = reqJsonData["method"];
-                        if (strcmp("get_dht_value", method) == 0) {
-                            read_dht();
-                        } else {
-                            set_error("not support");
-                        }
+                        set_error("not support");
                     }
+
                     send_packet();
                 }
             }
