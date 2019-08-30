@@ -3,12 +3,16 @@
 #if !defined(__SAM3X8E__)
 #if defined(__AVR__ ) || defined(__IMXRT1052__) || defined(__IMXRT1062__) || defined(ARDUINO_ARCH_STM32F1)
 #include <avr/pgmspace.h>
-#else
+#elif !defined(__arm__)
 #include <pgmspace.h>
 #endif
 #endif
 
+#if defined(__arm__)
+const uint16_t crc_tab16[256] = {
+#else
 const uint16_t crc_tab16[256] PROGMEM = {
+#endif
     0x0000, 0xc0c1, 0xc181, 0x0140
   , 0xc301, 0x03c0, 0x0280, 0xc241
   , 0xc601, 0x06c0, 0x0780, 0xc741
@@ -95,7 +99,11 @@ uint16_t crc_16( const unsigned char *input_str, size_t num_bytes ) {
 
   if ( ptr != NULL ) for (a=0; a<num_bytes; a++) {
 
+    #if defined(__arm__)
+    crc = (crc >> 8) ^ crc_tab16[ (crc ^ (uint16_t) *ptr++) & 0x00FF ];
+    #else
     crc = (crc >> 8) ^ pgm_read_word(&crc_tab16[ (crc ^ (uint16_t) *ptr++) & 0x00FF ]);
+    #endif
   }
 
   return crc;
