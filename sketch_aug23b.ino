@@ -33,6 +33,7 @@ DHT dht(DHTPIN, DHTTYPE);
 #define JSON_LENGTH 50
 char jsonPayload[JSON_LENGTH];
 uint16_t length;
+char * tpl = (char *)malloc(30);
 
 StaticJsonDocument<JSON_LENGTH> reqJsonData;
 
@@ -86,7 +87,7 @@ void loop() {
                         if (strcmp("get_dht_value", method) == 0) {
                             read_dht();
                         } else {
-                            set_error("no support");
+                            set_error(FC(F("not support")));
                         }
                     }
                     send_packet();
@@ -164,17 +165,29 @@ void read_dht() {
     int hl = (int)((h - hh) * 100);
     int th = (int)t;
     int tl = (int)((t - th) * 100);
-    sprintf(jsonPayload, "{\"humidity\": %d.%d, \"temperature\": %d.%d}", hh, hl, th, tl);
+    sprintf(jsonPayload, FC(F("{\"humidity\": %d.%d, \"temperature\": %d.%d}")), hh, hl, th, tl);
     set_data();
 }
 
 void set_error(const char * error) {
     jsonPayload[0] = '\0';
-    sprintf(jsonPayload, "{\"err\": \"%s\"}", error);
+    sprintf(jsonPayload, FC(F("{\"err\": \"%s\"}")), error);
     set_data();
 }
 
 void set_data() {
     length = strlen(jsonPayload);
     lora2mqtt_set_data(m, (const uint8_t*)jsonPayload, length);
+}
+
+char * FC(const __FlashStringHelper *ifsh) {
+    PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+    size_t n = 0;
+    while (1) {
+        unsigned char c = pgm_read_byte(p++);
+        tpl[n] = c;
+        n++;
+        if (c == 0) break;
+    }
+    return tpl;
 }
