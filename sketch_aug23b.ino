@@ -19,8 +19,6 @@ uint8_t payload[128];
 uint8_t payloadSend[128];
 lora2mqtt_t * m = lora2mqtt_new();
 
-// uint8_t hello[20] = "{\"temperature\": 30}";
-
 #define DEBUG 1
 
 #define DHTPIN 9     // what digital pin we're connected to
@@ -32,15 +30,18 @@ lora2mqtt_t * m = lora2mqtt_new();
 
 DHT dht(DHTPIN, DHTTYPE);
 
-StaticJsonDocument<50> jsonData;
-char jsonPayload[50];
+#define JSON_LENGTH 50
+char jsonPayload[JSON_LENGTH];
+uint16_t length;
+
+StaticJsonDocument<JSON_LENGTH> reqJsonData;
 
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(115200);
     while (!Serial) {;}
     #if DEBUG
-    Serial.println("Setup");
+    Serial.println(F("Setup"));
     #endif
     dht.begin();
 }
@@ -52,23 +53,42 @@ void loop() {
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
                 #if DEBUG
-                Serial.print("Recv Id: ");
+                Serial.print(F("Recv Id: "));
                 Serial.print(m -> id);
-                Serial.print(" Type: ");
+                Serial.print(F(" Type: "));
                 Serial.print(m -> type);
                 if (m -> length > TYPE_LENGTH) {
-                    Serial.print(" Data: ");
+                    Serial.print(F(" Data: "));
                     for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
                         Serial.write(m -> data[i]);
                     }
                 }
-                Serial.println("");
+                Serial.println();
                 #endif
 
                 if (m -> type == REQUEST) {
-                    uint16_t length = m -> length - TYPE_LENGTH;
+                    length = m -> length - TYPE_LENGTH;
+                    m -> data[length] = '\0';
                     lora2mqtt_set_type(m, RESPONSE);
-                    lora2mqtt_set_data(m, m -> data, length);
+
+                    // Deserialize the JSON document
+                    DeserializationError error = deserializeJson(reqJsonData, (char *)m -> data);
+
+                    // Test if parsing succeeds.
+                    if (error) {
+                        #if DEBUG
+                        Serial.print(F("deserializeJson() failed: "));
+                        Serial.println(error.c_str());
+                        #endif
+                        set_error(error.c_str());
+                    } else {
+                        char * method = reqJsonData["method"];
+                        if (strcmp("get_dht_value", method) == 0) {
+                            read_dht();
+                        } else {
+                            set_error("no support");
+                        }
+                    }
                     send_packet();
                 }
             }
@@ -76,33 +96,38 @@ void loop() {
         }
         if (headLen > MAX_PAYLOAD_LENGTH) {
             #if DEBUG
-            Serial.println("Error: payload to large");
+            Serial.println(F("Error: payload to large"));
             #endif
             headLen = 0;
         }
     }
 
     if (sendTimer + 10000 < millis()) {
+        lora2mqtt_reset(m);
+        lora2mqtt_set_id(m, id);
+        lora2mqtt_set_type(m, TELEMETRY);
+        id ++;
         read_dht();
+        send_packet();
     }
 }
 
 void send_packet() {
     #if DEBUG
-    Serial.print("Send Id: ");
+    Serial.print(F("Send Id: "));
     Serial.print(m -> id);
-    Serial.print(" Type: ");
+    Serial.print(F(" Type: "));
     Serial.print(m -> type);
     if (m -> length > TYPE_LENGTH) {
-        Serial.print(" Data: ");
+        Serial.print(F(" Data: "));
         for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
             Serial.write(m -> data[i]);
         }
     }
-    Serial.println("");
+    Serial.println();
     #endif
     lora2mqtt_to_binary(m, payloadSend);
-    uint16_t length = lora2mqtt_get_length(m);
+    length = lora2mqtt_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {
         Serial.write(payloadSend[i]);
     }
@@ -123,7 +148,7 @@ void read_dht() {
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t) /*|| isnan(f) */) {
         #if DEBUG
-        Serial.println("Failed to read from DHT sensor!");
+        Serial.println(F("Failed to read from DHT sensor!"));
         #endif
         sendTimer = millis();
         return;
@@ -134,20 +159,22 @@ void read_dht() {
     // // Compute heat index in Celsius (isFahreheit = false)
     // float hic = dht.computeHeatIndex(t, h, false);
 
-    jsonData["humidity"] = h;
-    jsonData["temperature"] = t;
+    jsonPayload[0] = '\0';
+    int hh = (int)h;
+    int hl = (int)((h - hh) * 100);
+    int th = (int)t;
+    int tl = (int)((t - th) * 100);
+    sprintf(jsonPayload, "{\"humidity\": %d.%d, \"temperature\": %d.%d}", hh, hl, th, tl);
+    set_data();
+}
 
-    serializeJson(jsonData, jsonPayload);
+void set_error(const char * error) {
+    jsonPayload[0] = '\0';
+    sprintf(jsonPayload, "{\"err\": \"%s\"}", error);
+    set_data();
+}
 
-    uint16_t length = strlen(jsonPayload);
-
-    lora2mqtt_reset(m);
-    lora2mqtt_set_id(m, id);
-    id ++;
-    lora2mqtt_set_type(m, TELEMETRY);
-    lora2mqtt_set_data(m, (const uint8_t* )jsonPayload, length);
-    send_packet();
-    #if DEBUG
-    Serial.println("DHT sensor data sended!");
-    #endif
+void set_data() {
+    length = strlen(jsonPayload);
+    lora2mqtt_set_data(m, (const uint8_t*)jsonPayload, length);
 }
