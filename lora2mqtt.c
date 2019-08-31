@@ -7,11 +7,11 @@ uint8_t *key;
 uint8_t *token;
 bool lora2mqtt_inited = false;
 
-void lora2mqtt_init() {
+void lora2mqtt_init(uint8_t * hex_key, uint8_t * hex_token) {
     key = (uint8_t *)malloc(KEY_LENGTH);
     token = (uint8_t *)malloc(TOKEN_LENGTH);
-    memcpy(key, (uint8_t *)unhex((const uint8_t *)KEY, KEY_LENGTH * 2), KEY_LENGTH);
-    memcpy(token, (uint8_t *)unhex((const uint8_t *)TOKEN, TOKEN_LENGTH * 2), TOKEN_LENGTH);
+    memcpy(key, (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
+    memcpy(token, (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
     lora2mqtt_inited = true;
 }
 
@@ -101,9 +101,9 @@ uint16_t lora2mqtt_get_data_length(const uint8_t * payload, const uint16_t lengt
     return to_uint16(lenh, lenl);
 }
 
-lora2mqtt_t * lora2mqtt_new() {
+lora2mqtt_t * lora2mqtt_new(uint8_t * hex_key, uint8_t * hex_token) {
     if (!lora2mqtt_inited) {
-        lora2mqtt_init();
+        lora2mqtt_init(hex_key, hex_token);
     }
     lora2mqtt_t * m = (lora2mqtt_t *)malloc(HEADER_LENGTH + TYPE_LENGTH);
     memcpy(m -> magic, (uint8_t *)LMQ0, MAGIC_LENGTH);

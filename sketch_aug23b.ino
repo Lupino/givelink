@@ -10,11 +10,14 @@ unsigned long sendTimer = millis();
 uint16_t id = 0;
 
 
+#define KEY "e72ae1431038b939f88b"
+#define TOKEN "e01fbebf6b0146039784884e4e5b1080"
+
 #define MAX_PAYLOAD_LENGTH 127
 uint16_t headLen = 0;
-uint8_t payload[128];
-uint8_t payloadSend[128];
-lora2mqtt_t * m = lora2mqtt_new();
+uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
+uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
+lora2mqtt_t * m = lora2mqtt_new(KEY, TOKEN);
 
 #define DEBUG 0
 
