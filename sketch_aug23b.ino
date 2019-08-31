@@ -17,7 +17,7 @@ uint16_t id = 0;
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
-lora2mqtt_t * m = lora2mqtt_new(KEY, TOKEN);
+lora2mqtt_t * m = lora2mqtt_new((const uint8_t *)KEY, (const uint8_t *)TOKEN);
 
 #define DEBUG 0
 

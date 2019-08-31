@@ -37,7 +37,7 @@ typedef struct {
 #define HEADER_LENGTH MAGIC_LENGTH + KEY_LENGTH + TOKEN_LENGTH + 2 + 2 + 2
 #define TYPE_LENGTH 1
 
-lora2mqtt_t * lora2mqtt_new(uint8_t * hex_key, uint8_t * hex_token);
+lora2mqtt_t * lora2mqtt_new(const uint8_t * hex_key, const uint8_t * hex_token);
 void lora2mqtt_reset(lora2mqtt_t * m);
 void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id);
 void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type);
