@@ -9,7 +9,10 @@
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
-unsigned long sendTimer = millis();
+unsigned long get_current_time();
+
+unsigned long sendTimer = get_current_time();
+unsigned long timedelta = 0;
 uint16_t id = 0;
 
 
@@ -93,7 +96,7 @@ void loop() {
         }
     }
 
-    if (sendTimer + 10000 < millis()) {
+    if (sendTimer + 10000 < get_current_time()) {
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
@@ -124,7 +127,7 @@ void send_packet() {
     }
     Serial.write('\r');
     Serial.write('\n');
-    sendTimer = millis();
+    sendTimer = get_current_time();
 }
 
 void read_dht() {
@@ -141,7 +144,7 @@ void read_dht() {
         #if DEBUG
         Serial.println(F("Failed to read from DHT sensor!"));
         #endif
-        sendTimer = millis();
+        sendTimer = get_current_time();
         return;
     }
 
@@ -182,7 +185,12 @@ char * FC(const __FlashStringHelper *ifsh) {
     return tpl;
 }
 
+unsigned long get_current_time() {
+    return millis() + timedelta;
+}
+
 void enter_power_down() { // 9 seconds
     delay(1000);  // wait serial writed
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    timedelta += 8000;
 }
