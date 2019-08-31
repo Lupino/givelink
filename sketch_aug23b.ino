@@ -12,8 +12,8 @@ uint8_t outByte = 0;
 unsigned long timedelta = 0;
 unsigned long get_current_time();
 
-unsigned long sendTimer = get_current_time();
-unsigned long timedelta = 0;
+unsigned long send_timer = get_current_time();
+unsigned long send_delay = 60000;
 uint16_t id = 0;
 
 
@@ -103,7 +103,7 @@ void loop() {
         }
     }
 
-    if (sendTimer + 10000 < get_current_time()) {
+    if (send_timer + send_delay < get_current_time()) {
         can_power_down = false;
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
@@ -141,7 +141,7 @@ void send_packet() {
     }
     Serial.write('\r');
     Serial.write('\n');
-    sendTimer = get_current_time();
+    send_timer = get_current_time();
 }
 
 void read_dht() {
@@ -158,7 +158,7 @@ void read_dht() {
         #if DEBUG
         Serial.println(F("Failed to read from DHT sensor!"));
         #endif
-        sendTimer = get_current_time();
+        send_timer = get_current_time();
         return;
     }
 
