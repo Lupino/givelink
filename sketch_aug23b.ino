@@ -83,7 +83,9 @@ void loop() {
                     lora2mqtt_set_type(m, RESPONSE);
 
                     if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)m -> data) == 0) {
-                        read_dht();
+                        if (!read_dht()) {
+                            set_error("read dht error");
+                        }
                     } else {
                         set_error("not support");
                     }
@@ -109,8 +111,11 @@ void loop() {
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
         id ++;
-        read_dht();
-        send_packet();
+        if (read_dht()) {
+            send_packet();
+        } else {
+            can_power_down = true;
+        }
     }
 
     if (can_power_down) {
@@ -144,7 +149,7 @@ void send_packet() {
     send_timer = get_current_time();
 }
 
-void read_dht() {
+bool read_dht() {
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     float h = dht.readHumidity();
@@ -159,7 +164,7 @@ void read_dht() {
         Serial.println(F("Failed to read from DHT sensor!"));
         #endif
         send_timer = get_current_time();
-        return;
+        return false;
     }
 
     // // Compute heat index in Fahrenheit (the default)
@@ -174,6 +179,7 @@ void read_dht() {
     int tl = (int)((t - th) * 100);
     sprintf(jsonPayload, FC(F("{\"humidity\": %d.%d, \"temperature\": %d.%d}")), hh, hl, th, tl);
     set_data();
+    return true;
 }
 
 void set_error(const char * error) {
