@@ -9,6 +9,7 @@
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
+unsigned long timedelta = 0;
 unsigned long get_current_time();
 
 unsigned long sendTimer = get_current_time();
@@ -40,6 +41,11 @@ DHT dht(DHTPIN, DHTTYPE);
 char jsonPayload[JSON_LENGTH];
 uint16_t length;
 char * tpl = (char *)malloc(30);
+
+// power down timer
+unsigned long wake_timer = get_current_time();
+unsigned long wake_delay = 1000;
+unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
@@ -84,7 +90,8 @@ void loop() {
 
                     send_packet();
                 }
-                enter_power_down();
+                can_power_down = true;
+                wake_timer = get_current_time();
             }
             headLen = 0;
         }
@@ -97,12 +104,19 @@ void loop() {
     }
 
     if (sendTimer + 10000 < get_current_time()) {
+        can_power_down = false;
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
         id ++;
         read_dht();
         send_packet();
+    }
+
+    if (can_power_down) {
+        if (wake_timer + wake_delay < get_current_time()) {
+            enter_power_down();
+        }
     }
 }
 
@@ -189,8 +203,8 @@ unsigned long get_current_time() {
     return millis() + timedelta;
 }
 
-void enter_power_down() { // 9 seconds
-    delay(1000);  // wait serial writed
+void enter_power_down() {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
     timedelta += 8000;
+    wake_timer = get_current_time();
 }
