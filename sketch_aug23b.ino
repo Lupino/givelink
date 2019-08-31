@@ -3,6 +3,9 @@
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
 
+// https://github.com/rocketscream/Low-Power.git
+#include "LowPower.h"
+
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
@@ -78,6 +81,7 @@ void loop() {
 
                     send_packet();
                 }
+                enter_power_down();
             }
             headLen = 0;
         }
@@ -176,4 +180,9 @@ char * FC(const __FlashStringHelper *ifsh) {
         if (c == 0) break;
     }
     return tpl;
+}
+
+void enter_power_down() { // 9 seconds
+    delay(1000);  // wait serial writed
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 }
