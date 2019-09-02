@@ -3,10 +3,21 @@
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
 
+#define ENABLE_POWER_DOWN 0
+
+#if ENABLE_POWER_DOWN
+// https://github.com/rocketscream/Low-Power.git
+#include "LowPower.h"
+#endif
+
 uint8_t inByte = 0;
 uint8_t outByte = 0;
 
-unsigned long sendTimer = millis();
+unsigned long timedelta = 0;
+unsigned long get_current_time();
+
+unsigned long send_timer = get_current_time();
+unsigned long send_delay = 60000;
 uint16_t id = 0;
 
 
@@ -34,6 +45,13 @@ DHT dht(DHTPIN, DHTTYPE);
 char jsonPayload[JSON_LENGTH];
 uint16_t length;
 char * tpl = (char *)malloc(30);
+
+#if ENABLE_POWER_DOWN
+// power down timer
+unsigned long wake_timer = get_current_time();
+unsigned long wake_delay = 1000;
+unsigned long can_power_down = true;
+#endif
 
 void setup() {
     // put your setup code here, to run once:
@@ -71,13 +89,19 @@ void loop() {
                     lora2mqtt_set_type(m, RESPONSE);
 
                     if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)m -> data) == 0) {
-                        read_dht();
+                        if (!read_dht()) {
+                            set_error("read dht error");
+                        }
                     } else {
                         set_error("not support");
                     }
 
                     send_packet();
                 }
+                #if ENABLE_POWER_DOWN
+                can_power_down = true;
+                wake_timer = get_current_time();
+                #endif
             }
             headLen = 0;
         }
@@ -89,14 +113,30 @@ void loop() {
         }
     }
 
-    if (sendTimer + 10000 < millis()) {
+    if (send_timer + send_delay < get_current_time()) {
+        #if ENABLE_POWER_DOWN
+        can_power_down = false;
+        #endif
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
         id ++;
-        read_dht();
-        send_packet();
+        if (read_dht()) {
+            send_packet();
+        #if ENABLE_POWER_DOWN
+        } else {
+            can_power_down = true;
+        #endif
+        }
     }
+
+    #if ENABLE_POWER_DOWN
+    if (can_power_down) {
+        if (wake_timer + wake_delay < get_current_time()) {
+            enter_power_down();
+        }
+    }
+    #endif
 }
 
 void send_packet() {
@@ -120,10 +160,10 @@ void send_packet() {
     }
     Serial.write('\r');
     Serial.write('\n');
-    sendTimer = millis();
+    send_timer = get_current_time();
 }
 
-void read_dht() {
+bool read_dht() {
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     float h = dht.readHumidity();
@@ -137,8 +177,8 @@ void read_dht() {
         #if DEBUG
         Serial.println(F("Failed to read from DHT sensor!"));
         #endif
-        sendTimer = millis();
-        return;
+        send_timer = get_current_time();
+        return false;
     }
 
     // // Compute heat index in Fahrenheit (the default)
@@ -153,6 +193,7 @@ void read_dht() {
     int tl = (int)((t - th) * 100);
     sprintf(jsonPayload, FC(F("{\"humidity\": %d.%d, \"temperature\": %d.%d}")), hh, hl, th, tl);
     set_data();
+    return true;
 }
 
 void set_error(const char * error) {
@@ -177,3 +218,15 @@ char * FC(const __FlashStringHelper *ifsh) {
     }
     return tpl;
 }
+
+unsigned long get_current_time() {
+    return millis() + timedelta;
+}
+
+#if ENABLE_POWER_DOWN
+void enter_power_down() {
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    timedelta += 8000;
+    wake_timer = get_current_time();
+}
+#endif
