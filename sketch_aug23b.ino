@@ -3,8 +3,12 @@
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
 
+#define ENABLE_POWER_DOWN 0
+
+#if ENABLE_POWER_DOWN
 // https://github.com/rocketscream/Low-Power.git
 #include "LowPower.h"
+#endif
 
 uint8_t inByte = 0;
 uint8_t outByte = 0;
@@ -42,10 +46,12 @@ char jsonPayload[JSON_LENGTH];
 uint16_t length;
 char * tpl = (char *)malloc(30);
 
+#if ENABLE_POWER_DOWN
 // power down timer
 unsigned long wake_timer = get_current_time();
 unsigned long wake_delay = 1000;
 unsigned long can_power_down = true;
+#endif
 
 void setup() {
     // put your setup code here, to run once:
@@ -92,8 +98,10 @@ void loop() {
 
                     send_packet();
                 }
+                #if ENABLE_POWER_DOWN
                 can_power_down = true;
                 wake_timer = get_current_time();
+                #endif
             }
             headLen = 0;
         }
@@ -106,23 +114,29 @@ void loop() {
     }
 
     if (send_timer + send_delay < get_current_time()) {
+        #if ENABLE_POWER_DOWN
         can_power_down = false;
+        #endif
         lora2mqtt_reset(m);
         lora2mqtt_set_id(m, id);
         lora2mqtt_set_type(m, TELEMETRY);
         id ++;
         if (read_dht()) {
             send_packet();
+        #if ENABLE_POWER_DOWN
         } else {
             can_power_down = true;
+        #endif
         }
     }
 
+    #if ENABLE_POWER_DOWN
     if (can_power_down) {
         if (wake_timer + wake_delay < get_current_time()) {
             enter_power_down();
         }
     }
+    #endif
 }
 
 void send_packet() {
@@ -209,8 +223,10 @@ unsigned long get_current_time() {
     return millis() + timedelta;
 }
 
+#if ENABLE_POWER_DOWN
 void enter_power_down() {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
     timedelta += 8000;
     wake_timer = get_current_time();
 }
+#endif
