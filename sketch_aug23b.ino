@@ -27,7 +27,9 @@
 
 #if USE_DS18B20
 #include <Wire.h>
+// https://github.com/PaulStoffregen/OneWire.git
 #include <OneWire.h>
+// https://github.com/milesburton/Arduino-Temperature-Control-Library.git
 #include <DallasTemperature.h>
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
