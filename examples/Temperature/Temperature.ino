@@ -26,6 +26,8 @@
 
 #if USE_MICROBIT
 #include <Adafruit_Microbit.h>
+
+// see https://github.com/sandeepmistry/arduino-nRF5/pull/205
 #include "SoftwareSerial.h"
 SoftwareSerial LORA_SERIAL(MICROBIT_RX, MICROBIT_TX);
 Adafruit_Microbit microbit;
