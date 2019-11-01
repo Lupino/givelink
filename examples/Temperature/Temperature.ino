@@ -2,6 +2,10 @@
 
 #define DEBUG 0
 
+#define USE_MICROBIT 1
+#define MICROBIT_RX 2
+#define MICROBIT_TX 3
+
 #define USE_DHT 0
 #define DHTPIN 9     // what digital pin we're connected to
 // Uncomment whatever type you're using!
@@ -9,7 +13,7 @@
 // #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 // #define DHTTYPE DHT21   // DHT 21 (AM2301)
 
-#define USE_DS18B20 1
+#define USE_DS18B20 0
 #define ONE_WIRE_BUS 9
 
 #define KEY "a6fff14ab80e43b864ef"
@@ -20,7 +24,15 @@
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
 
+#if USE_MICROBIT
+#include <Adafruit_Microbit.h>
+#include "SoftwareSerial.h"
+SoftwareSerial LORA_SERIAL(MICROBIT_RX, MICROBIT_TX);
+Adafruit_Microbit microbit;
+#define OVERSAMPLE 50
+#else
 #define LORA_SERIAL Serial
+#endif
 
 #if USE_DHT
 // https://github.com/adafruit/DHT-sensor-library.git
@@ -82,7 +94,18 @@ unsigned long can_power_down = true;
 void setup() {
     // put your setup code here, to run once:
     Serial.begin(115200);
-    while (!Serial) {;}
+
+    #if USE_MICROBIT
+    LORA_SERIAL.begin(115200);
+    microbit.BTLESerial.begin();
+    microbit.BTLESerial.setLocalName("microbit");
+
+    // Start LED matrix driver after radio (required)
+    microbit.begin();
+    #endif
+
+    while (!LORA_SERIAL) {;}
+
     #if DEBUG
     Serial.println(F("Setup"));
     #endif
@@ -154,6 +177,10 @@ void setup() {
 
 void loop() {
 
+    #if USE_MICROBIT
+    microbit.BTLESerial.poll();
+    #endif
+
     if (LORA_SERIAL.available() > 0) {
         outByte = LORA_SERIAL.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
@@ -197,6 +224,16 @@ void loop() {
                     }
                     #endif
 
+                    #if USE_MICROBIT
+                    if (strcmp("{\"method\":\"get_temp\"}", (const char *)m -> data) == 0) {
+                        if (!microbit_read_temp()) {
+                            set_error("microbit read temperature error");
+                        }
+                    } else {
+                        set_error("not support");
+                    }
+                    #endif
+
                     send_packet();
                 }
                 #if ENABLE_POWER_DOWN
@@ -233,6 +270,15 @@ void loop() {
         #endif
         #if USE_DS18B20
         if (read_ds18b20()) {
+            send_packet();
+        #if ENABLE_POWER_DOWN
+        } else {
+            can_power_down = true;
+        #endif
+        }
+        #endif
+        #if USE_MICROBIT
+        if (microbit_read_temp()) {
             send_packet();
         #if ENABLE_POWER_DOWN
         } else {
@@ -353,6 +399,32 @@ bool read_ds18b20() {
     return true;
 }
 
+#endif
+
+#if USE_MICROBIT
+bool microbit_read_temp() {
+    // Take 'OVERSAMPLES' measurements and average them!
+    float avgtemp = 0;
+    for (int i = 0; i < OVERSAMPLE; i++) {
+      int32_t temp;
+      do {
+        temp = microbit.getDieTemp();
+      } while (temp == 0);  // re run until we get valid data
+      avgtemp += temp;
+      delay(1);
+    }
+    avgtemp /= OVERSAMPLE;
+
+    // Send just the raw reading over bluetooth
+    microbit.BTLESerial.println(avgtemp);
+
+    jsonPayload[0] = '\0';
+    int th = (int)avgtemp;
+    int tl = (int)((avgtemp - th) * 100);
+    sprintf(jsonPayload, FC(F("{\"temperature\": %d.%d}")), th, tl);
+    set_data();
+    return true;
+}
 #endif
 
 void set_error(const char * error) {
