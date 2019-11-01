@@ -61,7 +61,6 @@ DeviceAddress insideThermometer;
 #include "LowPower.h"
 #endif
 
-uint8_t inByte = 0;
 uint8_t outByte = 0;
 
 unsigned long timedelta = 0;
