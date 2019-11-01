@@ -17,25 +17,25 @@ extern "C" {
 #define SUCCESS   6
 #define ERROR     7
 
+#define MAGIC_LENGTH 4
+#define KEY_LENGTH 10
+#define TOKEN_LENGTH 16
+#define HEADER_LENGTH MAGIC_LENGTH + KEY_LENGTH + TOKEN_LENGTH + 2 + 2 + 2
+#define TYPE_LENGTH 1
+
 // Magic
 #define LMQ0 "LMQ0"
 
 typedef struct {
     uint8_t  magic[4];
-    uint8_t  key[10];
-    uint8_t  token[16];
+    uint8_t  key[KEY_LENGTH];
+    uint8_t  token[TOKEN_LENGTH];
     uint16_t id;
     uint16_t length;
     uint16_t crc16;
     uint8_t  type;
     uint8_t  data[0];
 } __attribute__ ((packed)) lora2mqtt_t;
-
-#define MAGIC_LENGTH 4
-#define KEY_LENGTH 10
-#define TOKEN_LENGTH 16
-#define HEADER_LENGTH MAGIC_LENGTH + KEY_LENGTH + TOKEN_LENGTH + 2 + 2 + 2
-#define TYPE_LENGTH 1
 
 lora2mqtt_t * lora2mqtt_new(const uint8_t * hex_key, const uint8_t * hex_token);
 void lora2mqtt_reset(lora2mqtt_t * m);

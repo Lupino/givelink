@@ -1,0 +1,22 @@
+{
+    "name": "Lora2mqtt",
+    "description": "Lora2mqtt packet library",
+    "keywords": "lora mqtt packet",
+    "authors": [
+        {
+            "name": "Li Meng Jun",
+            "email": "lmjubuntu@gmail.com",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Lupino/Lora2mqtt"
+    },
+    "version": "2.3.5",
+    "homepage": "https://github.com/Lupino/Lora2mqtt",
+    "frameworks": "Arduino",
+    "examples": [
+        "examples/*/*.ino"
+    ]
+}

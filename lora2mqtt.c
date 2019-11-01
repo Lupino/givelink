@@ -3,13 +3,11 @@
 #include "lora2mqtt.h"
 #include <string.h>
 
-uint8_t *key;
-uint8_t *token;
+uint8_t key[KEY_LENGTH];
+uint8_t token[TOKEN_LENGTH];
 bool lora2mqtt_inited = false;
 
 void lora2mqtt_init(const uint8_t * hex_key, const uint8_t * hex_token) {
-    key = (uint8_t *)malloc(KEY_LENGTH);
-    token = (uint8_t *)malloc(TOKEN_LENGTH);
     memcpy(key, (uint8_t *)unhex(hex_key, KEY_LENGTH * 2), KEY_LENGTH);
     memcpy(token, (uint8_t *)unhex(hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
     lora2mqtt_inited = true;
