@@ -20,6 +20,8 @@
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
 
+#define LORA_SERIAL Serial
+
 #if USE_DHT
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
@@ -152,8 +154,8 @@ void setup() {
 
 void loop() {
 
-    if (Serial.available() > 0) {
-        outByte = Serial.read();
+    if (LORA_SERIAL.available() > 0) {
+        outByte = LORA_SERIAL.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
                 #if DEBUG
@@ -266,10 +268,10 @@ void send_packet() {
     lora2mqtt_to_binary(m, payloadSend);
     length = lora2mqtt_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {
-        Serial.write(payloadSend[i]);
+        LORA_SERIAL.write(payloadSend[i]);
     }
-    Serial.write('\r');
-    Serial.write('\n');
+    LORA_SERIAL.write('\r');
+    LORA_SERIAL.write('\n');
     send_timer = get_current_time();
 }
 
