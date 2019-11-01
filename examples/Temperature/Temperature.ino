@@ -12,8 +12,8 @@
 #define USE_DS18B20 1
 #define ONE_WIRE_BUS 9
 
-#define KEY "e72ae1431038b939f88b"
-#define TOKEN "e01fbebf6b0146039784884e4e5b1080"
+#define KEY "a6fff14ab80e43b864ef"
+#define TOKEN "f90e2f7fc9a74920b2150105080f3c26"
 
 #define ENABLE_POWER_DOWN 0
 
