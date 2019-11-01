@@ -94,15 +94,18 @@ unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
-    Serial.begin(115200);
+    LORA_SERIAL.begin(115200);
+
 
     #if USE_MICROBIT
-    LORA_SERIAL.begin(115200);
     microbit.BTLESerial.begin();
     microbit.BTLESerial.setLocalName("microbit");
 
     // Start LED matrix driver after radio (required)
     microbit.begin();
+    #if DEBUG
+    Serial.begin(115200);
+    #endif
     #endif
 
     while (!LORA_SERIAL) {;}
