@@ -9,6 +9,8 @@ extern "C" {
 #include <stdbool.h>
 #include <inttypes.h>
 
+#include "lora2mqtt_config.h"
+
 #define REQUEST   1
 #define RESPONSE  2
 #define ATTRIBUTE 3
@@ -19,11 +21,11 @@ extern "C" {
 
 #define MAGIC_LENGTH 4
 
-#ifndef KEY_LENGTH
+#if !defined(KEY_LENGTH)
 #define KEY_LENGTH 10
 #endif
 
-#ifndef TOKEN_LENGTH
+#if !defined(TOKEN_LENGTH)
 #define TOKEN_LENGTH 16
 #endif
 
