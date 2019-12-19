@@ -1,3 +1,9 @@
+#define KEY_LENGTH 9
+#define KEY "bdde6db9f3daf38f3a"
+
+#define TOKEN_LENGTH 16
+#define TOKEN "f90e2f7fc9a74920b2150105080f3c26"
+
 #include "lora2mqtt.h"
 
 #define DEBUG 0
@@ -17,9 +23,6 @@
 
 #define USE_DS18B20 0
 #define ONE_WIRE_BUS 9
-
-#define KEY "a6fff14ab80e43b864ef"
-#define TOKEN "f90e2f7fc9a74920b2150105080f3c26"
 
 #define ENABLE_POWER_DOWN 0
 
