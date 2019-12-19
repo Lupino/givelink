@@ -2,6 +2,8 @@
 
 #define DEBUG 0
 
+#define USE_L76X 1
+
 #define USE_MICROBIT 1
 #define MICROBIT_RX 2
 #define MICROBIT_TX 3
@@ -23,6 +25,16 @@
 
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
+
+#if USE_L76X
+#include <SoftwareSerial.h>
+#include "DEV_Config.h"
+#include "L76X.h"
+uint8_t L76X_buff[100] = {0};
+uint16_t L76X_buff_size = 0;
+GNRMC GPS1;
+Coordinates coord;
+#endif
 
 #if USE_MICROBIT
 #include <Adafruit_Microbit.h>
@@ -95,6 +107,18 @@ unsigned long can_power_down = true;
 void setup() {
     // put your setup code here, to run once:
     LORA_SERIAL.begin(115200);
+
+    #if USE_L76X
+    DEV_Set_Baudrate(115200);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
+    DEV_Delay_ms(500);
+
+    L76X_Send_Command(9600);
+    DEV_Set_Baudrate(9600);
+    DEV_Delay_ms(500);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    #endif
 
 
     #if USE_MICROBIT
@@ -185,6 +209,33 @@ void loop() {
     microbit.BTLESerial.poll();
     #endif
 
+    #if USE_L76X
+    if (DEV_Uart_Avaliable() > 0) {
+        outByte = DEV_Uart_Read();
+        if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {
+            #if DEBUG
+            Serial.print("Buff: ");
+            for (int i = 0; i < L76X_buff_size; i ++) {
+                Serial.write(L76X_buff[i]);
+            }
+            Serial.println("");
+            #endif
+
+            uint8_t buff[] = "$GNRMC,020810.000,A,2436.8967,N,11802.6260,E,0.20,0.00,171219,,,A*7F";
+            GPS1 = L76X_Gat_GNRMC(buff, 68);
+            #if DEBUG
+            Serial.print("Time:");
+            Serial.print(GPS1.Time_H);
+            Serial.print(":");
+            Serial.print(GPS1.Time_M);
+            Serial.print(":");
+            Serial.println(GPS1.Time_S);
+            #endif
+            L76X_buff_size = 0;
+        }
+    }
+    #endif
+
     if (LORA_SERIAL.available() > 0) {
         outByte = LORA_SERIAL.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
@@ -238,6 +289,16 @@ void loop() {
                     }
                     #endif
 
+                    #if USE_L76X
+                    if (strcmp("{\"method\":\"get_gps\"}", (const char *)m -> data) == 0) {
+                        if (!l76x_read_coord()) {
+                            set_error("l76x read gps error");
+                        }
+                    } else {
+                        set_error("not support");
+                    }
+                    #endif
+
                     send_packet();
                 }
                 #if ENABLE_POWER_DOWN
@@ -283,6 +344,15 @@ void loop() {
         #endif
         #if USE_MICROBIT
         if (microbit_read_temp()) {
+            send_packet();
+        #if ENABLE_POWER_DOWN
+        } else {
+            can_power_down = true;
+        #endif
+        }
+        #endif
+        #if USE_L76X
+        if (l76x_read_coord()) {
             send_packet();
         #if ENABLE_POWER_DOWN
         } else {
@@ -430,6 +500,27 @@ bool microbit_read_temp() {
     dtostrf(avgtemp, 8, 6, temp);
     sprintf(jsonPayload, FC(F("{\"temperature\": %s}")), temp);
     set_data();
+    return true;
+}
+#endif
+
+#if USE_L76X
+bool l76x_read_coord() {
+    if (GPS1.Status == 0) {
+        return false;
+    }
+
+    coord = L76X_Baidu_Coordinates();
+
+    jsonPayload[0] = '\0';
+    char lat[16];
+    char lon[16];
+    dtostrf(coord.Lat, 8, 6, lat);
+    dtostrf(coord.Lon, 8, 6, lon);
+
+    sprintf(jsonPayload, FC(F("{\"lat\": %s, \"lon\": %s}")), lat, lon);
+    set_data();
+
     return true;
 }
 #endif
