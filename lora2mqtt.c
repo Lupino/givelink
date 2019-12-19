@@ -105,8 +105,13 @@ lora2mqtt_t * lora2mqtt_new(const uint8_t * hex_key, const uint8_t * hex_token) 
     }
     lora2mqtt_t * m = (lora2mqtt_t *)malloc(HEADER_LENGTH + TYPE_LENGTH);
     memcpy(m -> magic, (uint8_t *)LMQ0, MAGIC_LENGTH);
+
+    m -> key_length = KEY_LENGTH;
     memcpy(m -> key, key, KEY_LENGTH);
+
+    m -> token_length = TOKEN_LENGTH;
     memcpy(m -> token, token, TOKEN_LENGTH);
+
     m -> id = 0;
     m -> length = TYPE_LENGTH;
     m -> crc16 = 0;
@@ -226,7 +231,7 @@ bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
             }
         }
     } else {
-        if (headLen >= 4) {
+        if (headLen >= MAGIC_LENGTH) {
             shift_data(payload, headLen);
             headLen -= 1;
         }

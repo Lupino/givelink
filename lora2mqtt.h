@@ -20,7 +20,7 @@ extern "C" {
 #define MAGIC_LENGTH 4
 #define KEY_LENGTH 10
 #define TOKEN_LENGTH 16
-#define HEADER_LENGTH MAGIC_LENGTH + KEY_LENGTH + TOKEN_LENGTH + 2 + 2 + 2
+#define HEADER_LENGTH MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH + 2 + 2 + 2
 #define TYPE_LENGTH 1
 
 // Magic
@@ -28,7 +28,9 @@ extern "C" {
 
 typedef struct {
     uint8_t  magic[4];
+    uint8_t  key_length;
     uint8_t  key[KEY_LENGTH];
+    uint8_t  token_length;
     uint8_t  token[TOKEN_LENGTH];
     uint16_t id;
     uint16_t length;
