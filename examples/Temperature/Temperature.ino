@@ -221,8 +221,7 @@ void loop() {
             Serial.println("");
             #endif
 
-            uint8_t buff[] = "$GNRMC,020810.000,A,2436.8967,N,11802.6260,E,0.20,0.00,171219,,,A*7F";
-            GPS1 = L76X_Gat_GNRMC(buff, 68);
+            GPS1 = L76X_Gat_GNRMC(L76X_buff, L76X_buff_size);
             #if DEBUG
             Serial.print("Time:");
             Serial.print(GPS1.Time_H);
