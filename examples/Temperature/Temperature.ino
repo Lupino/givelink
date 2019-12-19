@@ -4,9 +4,9 @@
 
 #define USE_L76X 1
 
-#define USE_MICROBIT 1
-#define MICROBIT_RX 2
-#define MICROBIT_TX 3
+#define USE_MICROBIT 0
+#define MICROBIT_RX 14
+#define MICROBIT_TX 15
 
 #define USE_DHT 0
 #define DHTPIN 9     // what digital pin we're connected to
