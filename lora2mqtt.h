@@ -18,8 +18,15 @@ extern "C" {
 #define ERROR     7
 
 #define MAGIC_LENGTH 4
+
+#ifndef KEY_LENGTH
 #define KEY_LENGTH 10
+#endif
+
+#ifndef TOKEN_LENGTH
 #define TOKEN_LENGTH 16
+#endif
+
 #define HEADER_LENGTH MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH + 2 + 2 + 2
 #define TYPE_LENGTH 1
 
