@@ -350,11 +350,14 @@ bool read_dht() {
     // float hic = dht.computeHeatIndex(t, h, false);
 
     jsonPayload[0] = '\0';
-    int hh = (int)h;
-    int hl = (int)((h - hh) * 100);
-    int th = (int)t;
-    int tl = (int)((t - th) * 100);
-    sprintf(jsonPayload, FC(F("{\"humidity\": %d.%d, \"temperature\": %d.%d}")), hh, hl, th, tl);
+
+    char temp[16];
+    dtostrf(t, 8, 6, temp);
+
+    char hum[16];
+    dtostrf(h, 8, 6, hum);
+
+    sprintf(jsonPayload, FC(F("{\"humidity\": %s, \"temperature\": %s}")), hum, temp);
     set_data();
     return true;
 }
@@ -396,9 +399,9 @@ bool read_ds18b20() {
     }
 
     jsonPayload[0] = '\0';
-    int hh = (int)tempC;
-    int hl = (int)((tempC - hh) * 100);
-    sprintf(jsonPayload, FC(F("{\"temperature\": %d.%d}")), hh, hl);
+    char temp[16];
+    dtostrf(tempC, 8, 6, temp);
+    sprintf(jsonPayload, FC(F("{\"temperature\": %s}")), temp);
     set_data();
     return true;
 }
@@ -423,9 +426,9 @@ bool microbit_read_temp() {
     microbit.BTLESerial.println(avgtemp);
 
     jsonPayload[0] = '\0';
-    int th = (int)avgtemp;
-    int tl = (int)((avgtemp - th) * 100);
-    sprintf(jsonPayload, FC(F("{\"temperature\": %d.%d}")), th, tl);
+    char temp[16];
+    dtostrf(avgtemp, 8, 6, temp);
+    sprintf(jsonPayload, FC(F("{\"temperature\": %s}")), temp);
     set_data();
     return true;
 }
