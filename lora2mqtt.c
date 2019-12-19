@@ -184,8 +184,8 @@ bool lora2mqtt_check_key(const uint8_t * payload, const uint16_t length) {
         return false;
     }
 
-    for (uint16_t i = 0; i < 10; i ++) {
-        if (key[i] != payload[i + 4]) {
+    for (uint16_t i = 0; i < KEY_LENGTH; i ++) {
+        if (key[i] != payload[i + MAGIC_LENGTH + 1]) {
             return false;
         }
     }
@@ -197,8 +197,8 @@ bool lora2mqtt_check_token(const uint8_t * payload, const uint16_t length) {
         return false;
     }
 
-    for (uint16_t i = 0; i < 16; i ++) {
-        if (token[i] != payload[i + 4 + 10]) {
+    for (uint16_t i = 0; i < TOKEN_LENGTH; i ++) {
+        if (token[i] != payload[i + MAGIC_LENGTH + 1 + KEY_LENGTH + 1]) {
             return false;
         }
     }
