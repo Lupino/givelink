@@ -1,9 +1,3 @@
-#define KEY_LENGTH 9
-#define KEY "bdde6db9f3daf38f3a"
-
-#define TOKEN_LENGTH 16
-#define TOKEN "f90e2f7fc9a74920b2150105080f3c26"
-
 #include "lora2mqtt.h"
 
 #define DEBUG 0
@@ -90,7 +84,7 @@ uint16_t id = 0;
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
-lora2mqtt_t * m = lora2mqtt_new((const uint8_t *)KEY, (const uint8_t *)TOKEN);
+lora2mqtt_t * m = lora2mqtt_new();
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);
