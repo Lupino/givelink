@@ -84,7 +84,11 @@ uint16_t id = 0;
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
-lora2mqtt_t * m = lora2mqtt_new();
+
+#define HEX_KEY "e72ae1431038b939f8"
+#define HEX_TOKEN "e01fbebf6b0146039784884e4e5b1080"
+
+lora2mqtt_t * m = lora2mqtt_new(HEX_KEY, HEX_TOKEN);
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);

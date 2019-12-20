@@ -9,8 +9,6 @@ extern "C" {
 #include <stdbool.h>
 #include <inttypes.h>
 
-#include "lora2mqtt_config.h"
-
 #define REQUEST   1
 #define RESPONSE  2
 #define ATTRIBUTE 3
@@ -21,26 +19,14 @@ extern "C" {
 
 #define MAGIC_LENGTH 4
 
-#if !defined(KEY_LENGTH)
-#define KEY_LENGTH 10
-#endif
-
-#if !defined(TOKEN_LENGTH)
-#define TOKEN_LENGTH 16
-#endif
-
-#define HEADER_LENGTH MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH + 2 + 2 + 2
 #define TYPE_LENGTH 1
+
+#define MINI_PACKET_LENGTH 2 + 2 + 2 + TYPE_LENGTH
 
 // Magic
 #define LMQ0 "LMQ0"
 
 typedef struct {
-    uint8_t  magic[4];
-    uint8_t  key_length;
-    uint8_t  key[KEY_LENGTH];
-    uint8_t  token_length;
-    uint8_t  token[TOKEN_LENGTH];
     uint16_t id;
     uint16_t length;
     uint16_t crc16;
@@ -48,7 +34,7 @@ typedef struct {
     uint8_t  data[0];
 } __attribute__ ((packed)) lora2mqtt_t;
 
-lora2mqtt_t * lora2mqtt_new();
+lora2mqtt_t * lora2mqtt_new(const char * hex_key, const char * hex_token);
 void lora2mqtt_reset(lora2mqtt_t * m);
 void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id);
 void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type);
