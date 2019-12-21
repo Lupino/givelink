@@ -31,11 +31,6 @@ int main() {
 
     lora2mqtt_t * data = lora2mqtt_new(hex_key, hex_token);
 
-    // printf("key length: %d\n", data -> key_length);
-    // print_hex(data->key, data->key_length);
-    // printf("token length: %d\n", data -> token_length);
-    // print_hex(data->token, data->token_length);
-
     uint8_t payload[200];
     uint16_t len = 0;
 
@@ -46,17 +41,10 @@ int main() {
         }
     }
 
-    printf("payload: %s\n", payload);
-    printf("totalLen: %d\n", len);
-
-    printf("payloadLength: %d\n", lora2mqtt_get_length(data));
+    print_hex(payload, len);
     lora2mqtt_from_binary(data, payload, len);
     printf("payloadLength: %d\n", lora2mqtt_get_length(data));
 
-    // printf("key length: %d\n", data -> key_length);
-    // print_hex(data->key, data->key_length);
-    // printf("token length: %d\n", data -> token_length);
-    // print_hex(data->token, data->token_length);
     printf("data length: %d\n", data -> length);
     print_data(data -> data, data -> length - 1);
 
