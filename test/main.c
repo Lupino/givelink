@@ -29,7 +29,8 @@ int main() {
 
     memcpy(buff, (uint8_t *)unhex(hex_buff, hex_buff_size), buff_size);
 
-    lora2mqtt_t * data = lora2mqtt_new(hex_key, hex_token);
+    lora2mqtt_init(hex_key, hex_token);
+    lora2mqtt_t * data = lora2mqtt_new();
 
     uint8_t payload[200];
     uint16_t len = 0;

@@ -34,7 +34,8 @@ typedef struct {
     uint8_t  data[0];
 } __attribute__ ((packed)) lora2mqtt_t;
 
-lora2mqtt_t * lora2mqtt_new(const char * hex_key, const char * hex_token);
+void lora2mqtt_init(const char * hex_key, const char * hex_token);
+lora2mqtt_t * lora2mqtt_new();
 void lora2mqtt_reset(lora2mqtt_t * m);
 void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id);
 void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type);

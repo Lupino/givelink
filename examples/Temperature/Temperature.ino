@@ -88,7 +88,7 @@ uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
 #define HEX_KEY "e72ae1431038b939f8"
 #define HEX_TOKEN "e01fbebf6b0146039784884e4e5b1080"
 
-lora2mqtt_t * m = lora2mqtt_new(HEX_KEY, HEX_TOKEN);
+lora2mqtt_t * m = lora2mqtt_new();
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);
@@ -107,6 +107,7 @@ unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
+    lora2mqtt_init(HEX_KEY, HEX_TOKEN);
     LORA_SERIAL.begin(115200);
 
     #if USE_L76X
