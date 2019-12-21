@@ -15,10 +15,12 @@ void lora2mqtt_init(const char * hex_key, const char * hex_token) {
     packet_header = malloc(PACKET_HEADER_LENGTH);
     memcpy(packet_header, (uint8_t *)LMQ0, MAGIC_LENGTH);
     packet_header[MAGIC_LENGTH] = KEY_LENGTH;
-    memcpy(packet_header+MAGIC_LENGTH+1, (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
+    memcpy(packet_header+MAGIC_LENGTH+1,
+            (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
 
     packet_header[MAGIC_LENGTH+1+KEY_LENGTH] = TOKEN_LENGTH;
-    memcpy(packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1, (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
+    memcpy(packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1,
+            (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
 }
 
 uint16_t to_uint16(const uint8_t h, const uint8_t l) {
@@ -45,7 +47,8 @@ void swap_edition(uint8_t * payload) {
 
 void lora2mqtt_to_binary_raw(const lora2mqtt_t * m, uint8_t * payload) {
     memcpy(payload, packet_header, PACKET_HEADER_LENGTH);
-    memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m, lora2mqtt_get_length(m) - PACKET_HEADER_LENGTH);
+    memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m,
+            lora2mqtt_get_length(m) - PACKET_HEADER_LENGTH);
     swap_edition(payload);
 }
 
@@ -66,7 +69,8 @@ void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
     payload[PACKET_HEADER_LENGTH + 5] = crcl;
 }
 
-bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, const uint16_t length) {
+bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload,
+        const uint16_t length) {
     if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH) {
         return false;
     }
@@ -100,7 +104,8 @@ uint16_t lora2mqtt_get_length(const lora2mqtt_t *m) {
     return m -> length + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
-uint16_t lora2mqtt_get_data_length(const uint8_t * payload, const uint16_t length) {
+uint16_t lora2mqtt_get_data_length(const uint8_t * payload,
+        const uint16_t length) {
     if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH) {
         return 0;
     }
@@ -141,7 +146,8 @@ void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type) {
     m->length = TYPE_LENGTH;
 }
 
-void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data, const uint16_t length) {
+void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data,
+        const uint16_t length) {
     memcpy(m->data, data, length);
     m->length = TYPE_LENGTH + length;
 }
