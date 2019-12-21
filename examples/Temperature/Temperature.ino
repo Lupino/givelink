@@ -211,7 +211,7 @@ void loop() {
     #endif
 
     #if USE_L76X
-    if (DEV_Uart_Avaliable() > 0) {
+    while (DEV_Uart_Avaliable() > 0) {
         outByte = DEV_Uart_Read();
         if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {
             #if DEBUG
@@ -236,7 +236,7 @@ void loop() {
     }
     #endif
 
-    if (LORA_SERIAL.available() > 0) {
+    while (LORA_SERIAL.available() > 0) {
         outByte = LORA_SERIAL.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
