@@ -169,10 +169,6 @@ bool lora2mqtt_discover_magic(const uint8_t * payload, const uint16_t length) {
 }
 
 bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
-    if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH) {
-        return false;
-    }
-
     uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
     uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
     uint16_t crc0 = to_uint16(crch, crcl);
@@ -188,11 +184,7 @@ bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
     return crc == crc0;
 }
 
-bool lora2mqtt_check_packet_header(const uint8_t * payload, const uint16_t length) {
-    if (length < PACKET_HEADER_LENGTH) {
-        return false;
-    }
-
+bool lora2mqtt_check_packet_header(const uint8_t * payload) {
     for (uint16_t i = 0; i < PACKET_HEADER_LENGTH; i ++) {
         if (packet_header[i] != payload[i]) {
             return false;
@@ -213,11 +205,15 @@ bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
     payload[headLen] = c;
     headLen = headLen + 1;
     if (lora2mqtt_discover_magic(payload, headLen)) {
-        if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1) {
+        if (headLen == PACKET_HEADER_LENGTH) {
+            if (!lora2mqtt_check_packet_header(payload)) {
+                // wrong packet, ignore
+                headLen = 0;
+            }
+        } else if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1) {
             uint16_t dataLen = lora2mqtt_get_data_length(payload, headLen);
             if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
-                if (lora2mqtt_check_crc16(payload, headLen)
-                        && lora2mqtt_check_packet_header(payload, headLen)) {
+                if (lora2mqtt_check_crc16(payload, headLen)) {
                     recved = true;
                 } else {
                     headLen = 0;
