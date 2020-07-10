@@ -23,8 +23,8 @@ extern "C" {
 
 #define MINI_PACKET_LENGTH 2 + 2 + 2 + TYPE_LENGTH
 
-// Magic
-#define LMQ0 "LMQ0"
+// givelink packet magic
+#define GLP0 "GLP0"
 
 typedef struct {
     uint16_t id;

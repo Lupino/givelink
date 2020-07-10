@@ -13,7 +13,7 @@ void givelink_init(const char * hex_key, const char * hex_token) {
     PACKET_HEADER_LENGTH = MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH;
 
     packet_header = malloc(PACKET_HEADER_LENGTH);
-    memcpy(packet_header, (uint8_t *)LMQ0, MAGIC_LENGTH);
+    memcpy(packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
     packet_header[MAGIC_LENGTH] = KEY_LENGTH;
     memcpy(packet_header+MAGIC_LENGTH+1,
             (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
