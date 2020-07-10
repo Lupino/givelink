@@ -1,4 +1,4 @@
-#include "lora2mqtt.h"
+#include "givelink.h"
 
 #define DEBUG 0
 
@@ -39,11 +39,11 @@ Coordinates prevcoord;
 
 // see https://github.com/sandeepmistry/arduino-nRF5/pull/205
 #include "SoftwareSerial.h"
-SoftwareSerial LORA_SERIAL(MICROBIT_RX, MICROBIT_TX);
+SoftwareSerial GL_SERIAL(MICROBIT_RX, MICROBIT_TX);
 Adafruit_Microbit microbit;
 #define OVERSAMPLE 50
 #else
-#define LORA_SERIAL Serial
+#define GL_SERIAL Serial
 #endif
 
 #if USE_DHT
@@ -89,7 +89,7 @@ uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
 #define HEX_KEY "e72ae1431038b939f8"
 #define HEX_TOKEN "e01fbebf6b0146039784884e4e5b1080"
 
-lora2mqtt_t * m = lora2mqtt_new();
+givelink_t * m = givelink_new();
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);
@@ -108,8 +108,8 @@ unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
-    lora2mqtt_init(HEX_KEY, HEX_TOKEN);
-    LORA_SERIAL.begin(115200);
+    givelink_init(HEX_KEY, HEX_TOKEN);
+    GL_SERIAL.begin(115200);
 
     #if USE_L76X
     DEV_Set_Baudrate(115200);
@@ -135,7 +135,7 @@ void setup() {
     #endif
     #endif
 
-    while (!LORA_SERIAL) {;}
+    while (!GL_SERIAL) {;}
 
     #if DEBUG
     Serial.println(F("Setup"));
@@ -238,10 +238,10 @@ void loop() {
     }
     #endif
 
-    while (LORA_SERIAL.available() > 0) {
-        outByte = LORA_SERIAL.read();
-        if (lora2mqtt_recv(payload, &headLen, outByte)) {
-            if (lora2mqtt_from_binary(m, payload, headLen)) {
+    while (GL_SERIAL.available() > 0) {
+        outByte = GL_SERIAL.read();
+        if (givelink_recv(payload, &headLen, outByte)) {
+            if (givelink_from_binary(m, payload, headLen)) {
                 #if DEBUG
                 Serial.print(F("Recv Id: "));
                 Serial.print(m -> id);
@@ -259,7 +259,7 @@ void loop() {
                 if (m -> type == REQUEST) {
                     length = m -> length - TYPE_LENGTH;
                     m -> data[length] = '\0';
-                    lora2mqtt_set_type(m, RESPONSE);
+                    givelink_set_type(m, RESPONSE);
 
                     #if USE_DHT
                     if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)m -> data) == 0) {
@@ -322,9 +322,9 @@ void loop() {
         #if ENABLE_POWER_DOWN
         can_power_down = false;
         #endif
-        lora2mqtt_reset(m);
-        lora2mqtt_set_id(m, id);
-        lora2mqtt_set_type(m, TELEMETRY);
+        givelink_reset(m);
+        givelink_set_id(m, id);
+        givelink_set_type(m, TELEMETRY);
         id ++;
         #if USE_DHT
         if (read_dht()) {
@@ -387,13 +387,13 @@ void send_packet() {
     }
     Serial.println();
     #endif
-    lora2mqtt_to_binary(m, payloadSend);
-    length = lora2mqtt_get_length(m);
+    givelink_to_binary(m, payloadSend);
+    length = givelink_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {
-        LORA_SERIAL.write(payloadSend[i]);
+        GL_SERIAL.write(payloadSend[i]);
     }
-    LORA_SERIAL.write('\r');
-    LORA_SERIAL.write('\n');
+    GL_SERIAL.write('\r');
+    GL_SERIAL.write('\n');
     send_timer = get_current_time();
 }
 
@@ -544,7 +544,7 @@ void set_error(const char * error) {
 
 void set_data() {
     length = strlen(jsonPayload);
-    lora2mqtt_set_data(m, (const uint8_t*)jsonPayload, length);
+    givelink_set_data(m, (const uint8_t*)jsonPayload, length);
 }
 
 char * FC(const __FlashStringHelper *ifsh) {
