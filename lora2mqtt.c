@@ -3,14 +3,24 @@
 #include "lora2mqtt.h"
 #include <string.h>
 
-uint8_t key[KEY_LENGTH];
-uint8_t token[TOKEN_LENGTH];
-bool lora2mqtt_inited = false;
+uint8_t *packet_header;
+uint16_t PACKET_HEADER_LENGTH;
 
-void lora2mqtt_init(const uint8_t * hex_key, const uint8_t * hex_token) {
-    memcpy(key, (uint8_t *)unhex(hex_key, KEY_LENGTH * 2), KEY_LENGTH);
-    memcpy(token, (uint8_t *)unhex(hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
-    lora2mqtt_inited = true;
+void lora2mqtt_init(const char * hex_key, const char * hex_token) {
+    uint16_t KEY_LENGTH = strlen(hex_key) / 2;
+    uint16_t TOKEN_LENGTH = strlen(hex_token) / 2;
+
+    PACKET_HEADER_LENGTH = MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH;
+
+    packet_header = malloc(PACKET_HEADER_LENGTH);
+    memcpy(packet_header, (uint8_t *)LMQ0, MAGIC_LENGTH);
+    packet_header[MAGIC_LENGTH] = KEY_LENGTH;
+    memcpy(packet_header+MAGIC_LENGTH+1,
+            (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
+
+    packet_header[MAGIC_LENGTH+1+KEY_LENGTH] = TOKEN_LENGTH;
+    memcpy(packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1,
+            (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
 }
 
 uint16_t to_uint16(const uint8_t h, const uint8_t l) {
@@ -30,21 +40,23 @@ void swap_one(uint8_t * payload, const int offset) {
 }
 
 void swap_edition(uint8_t * payload) {
-    swap_one(payload, HEADER_LENGTH - 2);         // crc16
-    swap_one(payload, HEADER_LENGTH - 2 - 2);     // length
-    swap_one(payload, HEADER_LENGTH - 2 - 2 - 2); // id
+    swap_one(payload, PACKET_HEADER_LENGTH + 4); // crc16
+    swap_one(payload, PACKET_HEADER_LENGTH + 2); // length
+    swap_one(payload, PACKET_HEADER_LENGTH);     // id
 }
 
 void lora2mqtt_to_binary_raw(const lora2mqtt_t * m, uint8_t * payload) {
-    memcpy(payload, (const uint8_t *)m, lora2mqtt_get_length(m));
+    memcpy(payload, packet_header, PACKET_HEADER_LENGTH);
+    memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m,
+            lora2mqtt_get_length(m) - PACKET_HEADER_LENGTH);
     swap_edition(payload);
 }
 
 void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
     lora2mqtt_to_binary_raw(m, payload);
 
-    payload[HEADER_LENGTH - 2] = 0;
-    payload[HEADER_LENGTH - 1] = 0;
+    payload[PACKET_HEADER_LENGTH + 4] = 0;
+    payload[PACKET_HEADER_LENGTH + 5] = 0;
 
     uint16_t crc = crc_16(payload, lora2mqtt_get_length(m));
 
@@ -53,60 +65,58 @@ void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
 
     from_uint16(crc, &crch, &crcl);
 
-    payload[HEADER_LENGTH - 2] = crch;
-    payload[HEADER_LENGTH - 1] = crcl;
+    payload[PACKET_HEADER_LENGTH + 4] = crch;
+    payload[PACKET_HEADER_LENGTH + 5] = crcl;
 }
 
-bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload, const uint16_t length) {
-    if (length < HEADER_LENGTH + TYPE_LENGTH) {
+bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload,
+        const uint16_t length) {
+    if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH) {
         return false;
     }
 
-    uint8_t idh = payload[HEADER_LENGTH - 2 - 2 - 2];
-    uint8_t idl = payload[HEADER_LENGTH - 2 - 2 - 1];
+    uint8_t idh = payload[PACKET_HEADER_LENGTH];
+    uint8_t idl = payload[PACKET_HEADER_LENGTH + 1];
 
     m -> id = to_uint16(idh, idl);
 
-    uint8_t lenh = payload[HEADER_LENGTH - 2 - 2];
-    uint8_t lenl = payload[HEADER_LENGTH - 2 - 1];
+    uint8_t lenh = payload[PACKET_HEADER_LENGTH + 2];
+    uint8_t lenl = payload[PACKET_HEADER_LENGTH + 3];
 
     m -> length = to_uint16(lenh, lenl);
 
-    uint8_t crch = payload[HEADER_LENGTH - 2];
-    uint8_t crcl = payload[HEADER_LENGTH - 1];
+    uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
+    uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
 
     m -> crc16 = to_uint16(crch, crcl);
 
-    m -> type = payload[HEADER_LENGTH];
+    m -> type = payload[PACKET_HEADER_LENGTH + 6];
 
     if (m -> length > TYPE_LENGTH) {
-        memcpy(m->data, payload + HEADER_LENGTH + TYPE_LENGTH, length - HEADER_LENGTH - TYPE_LENGTH);
+        memcpy(m->data, payload + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH,
+                length - PACKET_HEADER_LENGTH - MINI_PACKET_LENGTH);
     }
 
     return true;
 }
 
 uint16_t lora2mqtt_get_length(const lora2mqtt_t *m) {
-    return m -> length + HEADER_LENGTH;
+    return m -> length + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
-uint16_t lora2mqtt_get_data_length(const uint8_t * payload, const uint16_t length) {
-    if (length < HEADER_LENGTH) {
+uint16_t lora2mqtt_get_data_length(const uint8_t * payload,
+        const uint16_t length) {
+    if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH) {
         return 0;
     }
-    uint8_t lenh = payload[HEADER_LENGTH - 2 - 2];
-    uint8_t lenl = payload[HEADER_LENGTH - 2 - 1];
+    uint8_t lenh = payload[PACKET_HEADER_LENGTH + 2];
+    uint8_t lenl = payload[PACKET_HEADER_LENGTH + 3];
     return to_uint16(lenh, lenl);
 }
 
-lora2mqtt_t * lora2mqtt_new(const uint8_t * hex_key, const uint8_t * hex_token) {
-    if (!lora2mqtt_inited) {
-        lora2mqtt_init(hex_key, hex_token);
-    }
-    lora2mqtt_t * m = (lora2mqtt_t *)malloc(HEADER_LENGTH + TYPE_LENGTH);
-    memcpy(m -> magic, (uint8_t *)LMQ0, MAGIC_LENGTH);
-    memcpy(m -> key, key, KEY_LENGTH);
-    memcpy(m -> token, token, TOKEN_LENGTH);
+lora2mqtt_t * lora2mqtt_new() {
+    lora2mqtt_t * m = (lora2mqtt_t *)malloc(MINI_PACKET_LENGTH);
+
     m -> id = 0;
     m -> length = TYPE_LENGTH;
     m -> crc16 = 0;
@@ -136,7 +146,8 @@ void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type) {
     m->length = TYPE_LENGTH;
 }
 
-void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data, const uint16_t length) {
+void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data,
+        const uint16_t length) {
     memcpy(m->data, data, length);
     m->length = TYPE_LENGTH + length;
 }
@@ -155,45 +166,24 @@ bool lora2mqtt_discover_magic(const uint8_t * payload, const uint16_t length) {
 }
 
 bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
-    if (length < HEADER_LENGTH + 1) {
-        return false;
-    }
-
-    uint8_t crch = payload[HEADER_LENGTH - 2];
-    uint8_t crcl = payload[HEADER_LENGTH - 1];
+    uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
+    uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
     uint16_t crc0 = to_uint16(crch, crcl);
 
-    payload[HEADER_LENGTH - 2] = 0x00;
-    payload[HEADER_LENGTH - 1] = 0x00;
+    payload[PACKET_HEADER_LENGTH + 4] = 0x00;
+    payload[PACKET_HEADER_LENGTH + 5] = 0x00;
 
     uint16_t crc = crc_16(payload, length);
 
-    payload[HEADER_LENGTH - 2] = crch;
-    payload[HEADER_LENGTH - 1] = crcl;
+    payload[PACKET_HEADER_LENGTH + 4] = crch;
+    payload[PACKET_HEADER_LENGTH + 5] = crcl;
 
     return crc == crc0;
 }
 
-bool lora2mqtt_check_key(const uint8_t * payload, const uint16_t length) {
-    if (length < HEADER_LENGTH + 1) {
-        return false;
-    }
-
-    for (uint16_t i = 0; i < 10; i ++) {
-        if (key[i] != payload[i + 4]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool lora2mqtt_check_token(const uint8_t * payload, const uint16_t length) {
-    if (length < HEADER_LENGTH + 1) {
-        return false;
-    }
-
-    for (uint16_t i = 0; i < 16; i ++) {
-        if (token[i] != payload[i + 4 + 10]) {
+bool lora2mqtt_check_packet_header(const uint8_t * payload) {
+    for (uint16_t i = 0; i < PACKET_HEADER_LENGTH; i ++) {
+        if (packet_header[i] != payload[i]) {
             return false;
         }
     }
@@ -212,21 +202,23 @@ bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
     payload[headLen] = c;
     headLen = headLen + 1;
     if (lora2mqtt_discover_magic(payload, headLen)) {
-        if (headLen >= HEADER_LENGTH) {
+        if (headLen == PACKET_HEADER_LENGTH) {
+            if (!lora2mqtt_check_packet_header(payload)) {
+                // wrong packet, ignore
+                headLen = 0;
+            }
+        } else if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1) {
             uint16_t dataLen = lora2mqtt_get_data_length(payload, headLen);
-            if (headLen >= HEADER_LENGTH + dataLen) {
-                if (lora2mqtt_check_crc16(payload, headLen)
-                        && lora2mqtt_check_key(payload, headLen)
-                        && lora2mqtt_check_token(payload, headLen)) {
+            if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
+                if (lora2mqtt_check_crc16(payload, headLen)) {
                     recved = true;
-
                 } else {
                     headLen = 0;
                 }
             }
         }
     } else {
-        if (headLen >= 4) {
+        if (headLen >= MAGIC_LENGTH) {
             shift_data(payload, headLen);
             headLen -= 1;
         }

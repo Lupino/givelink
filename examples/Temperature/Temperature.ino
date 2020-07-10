@@ -2,9 +2,11 @@
 
 #define DEBUG 0
 
-#define USE_MICROBIT 1
-#define MICROBIT_RX 2
-#define MICROBIT_TX 3
+#define USE_L76X 1
+
+#define USE_MICROBIT 0
+#define MICROBIT_RX 14
+#define MICROBIT_TX 15
 
 #define USE_DHT 0
 #define DHTPIN 9     // what digital pin we're connected to
@@ -16,13 +18,21 @@
 #define USE_DS18B20 0
 #define ONE_WIRE_BUS 9
 
-#define KEY "a6fff14ab80e43b864ef"
-#define TOKEN "f90e2f7fc9a74920b2150105080f3c26"
-
-#define ENABLE_POWER_DOWN 0
+#define ENABLE_POWER_DOWN 1
 
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
+
+#if USE_L76X
+#include <SoftwareSerial.h>
+#include "DEV_Config.h"
+#include "L76X.h"
+uint8_t L76X_buff[100] = {0};
+uint16_t L76X_buff_size = 0;
+GNRMC GPS1;
+Coordinates coord;
+Coordinates prevcoord;
+#endif
 
 #if USE_MICROBIT
 #include <Adafruit_Microbit.h>
@@ -75,7 +85,11 @@ uint16_t id = 0;
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
-lora2mqtt_t * m = lora2mqtt_new((const uint8_t *)KEY, (const uint8_t *)TOKEN);
+
+#define HEX_KEY "e72ae1431038b939f8"
+#define HEX_TOKEN "e01fbebf6b0146039784884e4e5b1080"
+
+lora2mqtt_t * m = lora2mqtt_new();
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);
@@ -94,7 +108,20 @@ unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
+    lora2mqtt_init(HEX_KEY, HEX_TOKEN);
     LORA_SERIAL.begin(115200);
+
+    #if USE_L76X
+    DEV_Set_Baudrate(115200);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
+    DEV_Delay_ms(500);
+
+    DEV_Set_Baudrate(9600);
+    DEV_Delay_ms(500);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_POS_FIX_10S);
+    #endif
 
 
     #if USE_MICROBIT
@@ -185,7 +212,33 @@ void loop() {
     microbit.BTLESerial.poll();
     #endif
 
-    if (LORA_SERIAL.available() > 0) {
+    #if USE_L76X
+    while (DEV_Uart_Avaliable() > 0) {
+        outByte = DEV_Uart_Read();
+        if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {
+            #if DEBUG
+            Serial.print("Buff: ");
+            for (int i = 0; i < L76X_buff_size; i ++) {
+                Serial.write(L76X_buff[i]);
+            }
+            Serial.println("");
+            #endif
+
+            GPS1 = L76X_Gat_GNRMC(L76X_buff, L76X_buff_size);
+            #if DEBUG
+            Serial.print("Time:");
+            Serial.print(GPS1.Time_H);
+            Serial.print(":");
+            Serial.print(GPS1.Time_M);
+            Serial.print(":");
+            Serial.println(GPS1.Time_S);
+            #endif
+            L76X_buff_size = 0;
+        }
+    }
+    #endif
+
+    while (LORA_SERIAL.available() > 0) {
         outByte = LORA_SERIAL.read();
         if (lora2mqtt_recv(payload, &headLen, outByte)) {
             if (lora2mqtt_from_binary(m, payload, headLen)) {
@@ -238,6 +291,16 @@ void loop() {
                     }
                     #endif
 
+                    #if USE_L76X
+                    if (strcmp("{\"method\":\"get_gps\"}", (const char *)m -> data) == 0) {
+                        if (!l76x_read_coord(false)) {
+                            set_error("l76x read gps error");
+                        }
+                    } else {
+                        set_error("not support");
+                    }
+                    #endif
+
                     send_packet();
                 }
                 #if ENABLE_POWER_DOWN
@@ -283,6 +346,15 @@ void loop() {
         #endif
         #if USE_MICROBIT
         if (microbit_read_temp()) {
+            send_packet();
+        #if ENABLE_POWER_DOWN
+        } else {
+            can_power_down = true;
+        #endif
+        }
+        #endif
+        #if USE_L76X
+        if (l76x_read_coord(true)) {
             send_packet();
         #if ENABLE_POWER_DOWN
         } else {
@@ -350,11 +422,14 @@ bool read_dht() {
     // float hic = dht.computeHeatIndex(t, h, false);
 
     jsonPayload[0] = '\0';
-    int hh = (int)h;
-    int hl = (int)((h - hh) * 100);
-    int th = (int)t;
-    int tl = (int)((t - th) * 100);
-    sprintf(jsonPayload, FC(F("{\"humidity\": %d.%d, \"temperature\": %d.%d}")), hh, hl, th, tl);
+
+    char temp[16];
+    dtostrf(t, 8, 6, temp);
+
+    char hum[16];
+    dtostrf(h, 8, 6, hum);
+
+    sprintf(jsonPayload, FC(F("{\"humidity\": %s, \"temperature\": %s}")), hum, temp);
     set_data();
     return true;
 }
@@ -396,9 +471,9 @@ bool read_ds18b20() {
     }
 
     jsonPayload[0] = '\0';
-    int hh = (int)tempC;
-    int hl = (int)((tempC - hh) * 100);
-    sprintf(jsonPayload, FC(F("{\"temperature\": %d.%d}")), hh, hl);
+    char temp[16];
+    dtostrf(tempC, 8, 6, temp);
+    sprintf(jsonPayload, FC(F("{\"temperature\": %s}")), temp);
     set_data();
     return true;
 }
@@ -423,10 +498,40 @@ bool microbit_read_temp() {
     microbit.BTLESerial.println(avgtemp);
 
     jsonPayload[0] = '\0';
-    int th = (int)avgtemp;
-    int tl = (int)((avgtemp - th) * 100);
-    sprintf(jsonPayload, FC(F("{\"temperature\": %d.%d}")), th, tl);
+    char temp[16];
+    dtostrf(avgtemp, 8, 6, temp);
+    sprintf(jsonPayload, FC(F("{\"temperature\": %s}")), temp);
     set_data();
+    return true;
+}
+#endif
+
+#if USE_L76X
+bool l76x_read_coord(bool checked) {
+    if (GPS1.Status == 0) {
+        return false;
+    }
+
+    coord = L76X_Baidu_Coordinates();
+
+    if (checked) {
+        if (coord.Lat == prevcoord.Lat && coord.Lon == prevcoord.Lon) {
+            return false;
+        }
+    }
+
+    prevcoord.Lat = coord.Lat;
+    prevcoord.Lon = coord.Lon;
+
+    jsonPayload[0] = '\0';
+    char lat[16];
+    char lon[16];
+    dtostrf(coord.Lat, 8, 6, lat);
+    dtostrf(coord.Lon, 8, 6, lon);
+
+    sprintf(jsonPayload, FC(F("{\"lat\": %s, \"lon\": %s}")), lat, lon);
+    set_data();
+
     return true;
 }
 #endif
