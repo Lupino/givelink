@@ -257,8 +257,6 @@ void loop() {
                 #endif
 
                 if (m -> type == REQUEST) {
-                    length = m -> length - TYPE_LENGTH;
-                    m -> data[length] = '\0';
                     givelink_set_type(m, RESPONSE);
 
                     #if USE_DHT

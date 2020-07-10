@@ -97,6 +97,8 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
                 length - PACKET_HEADER_LENGTH - MINI_PACKET_LENGTH);
     }
 
+    m -> data[m -> length - TYPE_LENGTH] = '\0';
+
     return true;
 }
 
