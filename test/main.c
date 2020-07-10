@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lora2mqtt.h"
+#include "givelink.h"
 #include "unhex.h"
 
 uint16_t hex_buff_size = 118;
@@ -29,26 +29,26 @@ int main() {
 
     memcpy(buff, (uint8_t *)unhex(hex_buff, hex_buff_size), buff_size);
 
-    lora2mqtt_init(hex_key, hex_token);
-    lora2mqtt_t * data = lora2mqtt_new();
+    givelink_init(hex_key, hex_token);
+    givelink_t * data = givelink_new();
 
     uint8_t payload[200];
     uint16_t len = 0;
 
     for (uint16_t i = 0; i < buff_size; i ++) {
-        if (lora2mqtt_recv(payload, &len, buff[i])) {
+        if (givelink_recv(payload, &len, buff[i])) {
             printf("got\n");
             break;
         }
     }
 
     print_hex(payload, len);
-    lora2mqtt_from_binary(data, payload, len);
-    printf("payloadLength: %d\n", lora2mqtt_get_length(data));
+    givelink_from_binary(data, payload, len);
+    printf("payloadLength: %d\n", givelink_get_length(data));
 
     printf("data length: %d\n", data -> length);
     print_data(data -> data, data -> length - 1);
 
-    lora2mqtt_to_binary(data, payload);
-    print_hex(payload, lora2mqtt_get_length(data));
+    givelink_to_binary(data, payload);
+    print_hex(payload, givelink_get_length(data));
 }

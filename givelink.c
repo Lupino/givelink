@@ -1,12 +1,12 @@
 #include "crc16.h"
 #include "unhex.h"
-#include "lora2mqtt.h"
+#include "givelink.h"
 #include <string.h>
 
 uint8_t *packet_header;
 uint16_t PACKET_HEADER_LENGTH;
 
-void lora2mqtt_init(const char * hex_key, const char * hex_token) {
+void givelink_init(const char * hex_key, const char * hex_token) {
     uint16_t KEY_LENGTH = strlen(hex_key) / 2;
     uint16_t TOKEN_LENGTH = strlen(hex_token) / 2;
 
@@ -45,20 +45,20 @@ void swap_edition(uint8_t * payload) {
     swap_one(payload, PACKET_HEADER_LENGTH);     // id
 }
 
-void lora2mqtt_to_binary_raw(const lora2mqtt_t * m, uint8_t * payload) {
+void givelink_to_binary_raw(const givelink_t * m, uint8_t * payload) {
     memcpy(payload, packet_header, PACKET_HEADER_LENGTH);
     memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m,
-            lora2mqtt_get_length(m) - PACKET_HEADER_LENGTH);
+            givelink_get_length(m) - PACKET_HEADER_LENGTH);
     swap_edition(payload);
 }
 
-void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
-    lora2mqtt_to_binary_raw(m, payload);
+void givelink_to_binary(const givelink_t * m, uint8_t * payload) {
+    givelink_to_binary_raw(m, payload);
 
     payload[PACKET_HEADER_LENGTH + 4] = 0;
     payload[PACKET_HEADER_LENGTH + 5] = 0;
 
-    uint16_t crc = crc_16(payload, lora2mqtt_get_length(m));
+    uint16_t crc = crc_16(payload, givelink_get_length(m));
 
     uint8_t crch;
     uint8_t crcl;
@@ -69,7 +69,7 @@ void lora2mqtt_to_binary(const lora2mqtt_t * m, uint8_t * payload) {
     payload[PACKET_HEADER_LENGTH + 5] = crcl;
 }
 
-bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload,
+bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
         const uint16_t length) {
     if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH) {
         return false;
@@ -100,11 +100,11 @@ bool lora2mqtt_from_binary(lora2mqtt_t * m, const uint8_t * payload,
     return true;
 }
 
-uint16_t lora2mqtt_get_length(const lora2mqtt_t *m) {
+uint16_t givelink_get_length(const givelink_t *m) {
     return m -> length + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
-uint16_t lora2mqtt_get_data_length(const uint8_t * payload,
+uint16_t givelink_get_data_length(const uint8_t * payload,
         const uint16_t length) {
     if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH) {
         return 0;
@@ -114,8 +114,8 @@ uint16_t lora2mqtt_get_data_length(const uint8_t * payload,
     return to_uint16(lenh, lenl);
 }
 
-lora2mqtt_t * lora2mqtt_new() {
-    lora2mqtt_t * m = (lora2mqtt_t *)malloc(MINI_PACKET_LENGTH);
+givelink_t * givelink_new() {
+    givelink_t * m = (givelink_t *)malloc(MINI_PACKET_LENGTH);
 
     m -> id = 0;
     m -> length = TYPE_LENGTH;
@@ -124,35 +124,35 @@ lora2mqtt_t * lora2mqtt_new() {
     return m;
 }
 
-void lora2mqtt_reset(lora2mqtt_t * m) {
+void givelink_reset(givelink_t * m) {
     m -> id = 0;
     m -> length = TYPE_LENGTH;
     m -> crc16 = 0;
     m -> type = PING;
 }
 
-void lora2mqtt_free(lora2mqtt_t * m) {
+void givelink_free(givelink_t * m) {
     if (m) {
         free(m);
     }
 }
 
-void lora2mqtt_set_id(lora2mqtt_t * m, const uint16_t id) {
+void givelink_set_id(givelink_t * m, const uint16_t id) {
     m->id = id;
 }
 
-void lora2mqtt_set_type(lora2mqtt_t * m, const uint8_t type) {
+void givelink_set_type(givelink_t * m, const uint8_t type) {
     m->type = type;
     m->length = TYPE_LENGTH;
 }
 
-void lora2mqtt_set_data(lora2mqtt_t * m, const uint8_t * data,
+void givelink_set_data(givelink_t * m, const uint8_t * data,
         const uint16_t length) {
     memcpy(m->data, data, length);
     m->length = TYPE_LENGTH + length;
 }
 
-bool lora2mqtt_discover_magic(const uint8_t * payload, const uint16_t length) {
+bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     if (length < MAGIC_LENGTH) {
         return false;
     }
@@ -165,7 +165,7 @@ bool lora2mqtt_discover_magic(const uint8_t * payload, const uint16_t length) {
     return false;
 }
 
-bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
+bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
     uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
     uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
     uint16_t crc0 = to_uint16(crch, crcl);
@@ -181,7 +181,7 @@ bool lora2mqtt_check_crc16(uint8_t * payload, uint16_t length) {
     return crc == crc0;
 }
 
-bool lora2mqtt_check_packet_header(const uint8_t * payload) {
+bool givelink_check_packet_header(const uint8_t * payload) {
     for (uint16_t i = 0; i < PACKET_HEADER_LENGTH; i ++) {
         if (packet_header[i] != payload[i]) {
             return false;
@@ -196,21 +196,21 @@ void shift_data(uint8_t * payload, uint16_t length) {
     }
 }
 
-bool lora2mqtt_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
+bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
     uint16_t headLen = *length;
     bool recved = false;
     payload[headLen] = c;
     headLen = headLen + 1;
-    if (lora2mqtt_discover_magic(payload, headLen)) {
+    if (givelink_discover_magic(payload, headLen)) {
         if (headLen == PACKET_HEADER_LENGTH) {
-            if (!lora2mqtt_check_packet_header(payload)) {
+            if (!givelink_check_packet_header(payload)) {
                 // wrong packet, ignore
                 headLen = 0;
             }
         } else if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1) {
-            uint16_t dataLen = lora2mqtt_get_data_length(payload, headLen);
+            uint16_t dataLen = givelink_get_data_length(payload, headLen);
             if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
-                if (lora2mqtt_check_crc16(payload, headLen)) {
+                if (givelink_check_crc16(payload, headLen)) {
                     recved = true;
                 } else {
                     headLen = 0;
