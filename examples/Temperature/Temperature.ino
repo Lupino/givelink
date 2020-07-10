@@ -18,7 +18,7 @@
 #define USE_DS18B20 0
 #define ONE_WIRE_BUS 9
 
-#define ENABLE_POWER_DOWN 0
+#define ENABLE_POWER_DOWN 1
 
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
@@ -31,6 +31,7 @@ uint8_t L76X_buff[100] = {0};
 uint16_t L76X_buff_size = 0;
 GNRMC GPS1;
 Coordinates coord;
+Coordinates prevcoord;
 #endif
 
 #if USE_MICROBIT
@@ -116,10 +117,10 @@ void setup() {
     L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
     DEV_Delay_ms(500);
 
-    L76X_Send_Command(9600);
     DEV_Set_Baudrate(9600);
     DEV_Delay_ms(500);
     L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_POS_FIX_10S);
     #endif
 
 
@@ -292,7 +293,7 @@ void loop() {
 
                     #if USE_L76X
                     if (strcmp("{\"method\":\"get_gps\"}", (const char *)m -> data) == 0) {
-                        if (!l76x_read_coord()) {
+                        if (!l76x_read_coord(false)) {
                             set_error("l76x read gps error");
                         }
                     } else {
@@ -353,7 +354,7 @@ void loop() {
         }
         #endif
         #if USE_L76X
-        if (l76x_read_coord()) {
+        if (l76x_read_coord(true)) {
             send_packet();
         #if ENABLE_POWER_DOWN
         } else {
@@ -506,12 +507,21 @@ bool microbit_read_temp() {
 #endif
 
 #if USE_L76X
-bool l76x_read_coord() {
+bool l76x_read_coord(bool checked) {
     if (GPS1.Status == 0) {
         return false;
     }
 
     coord = L76X_Baidu_Coordinates();
+
+    if (checked) {
+        if (coord.Lat == prevcoord.Lat && coord.Lon == prevcoord.Lon) {
+            return false;
+        }
+    }
+
+    prevcoord.Lat = coord.Lat;
+    prevcoord.Lon = coord.Lon;
 
     jsonPayload[0] = '\0';
     char lat[16];
