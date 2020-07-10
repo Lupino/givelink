@@ -146,6 +146,7 @@ void givelink_set_id(givelink_t * m, const uint16_t id) {
 void givelink_set_type(givelink_t * m, const uint8_t type) {
     m->type = type;
     m->length = TYPE_LENGTH;
+    m->data[0] = '\0';
 }
 
 void givelink_set_data(givelink_t * m, const uint8_t * data,
