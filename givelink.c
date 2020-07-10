@@ -159,9 +159,9 @@ bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     if (length < MAGIC_LENGTH) {
         return false;
     }
-    if (payload[0] == 'L'
-            && payload[1] == 'M'
-            && payload[2] == 'Q'
+    if (payload[0] == 'G'
+            && payload[1] == 'L'
+            && payload[2] == 'P'
             && payload[3] == '0') {
         return true;
     }
