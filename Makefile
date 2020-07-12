@@ -5,5 +5,10 @@ SRC=crc16.c \
 
 CFLAGS=-D__arm__ -I. -Itest
 
-all:
+all: givelink_test
+
+givelink_test: $(SRC)
 	$(CC) -o givelink_test $(CFLAGS) $(SRC)
+
+clean:
+	rm -f givelink_test
