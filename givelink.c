@@ -13,6 +13,10 @@ uint16_t addr_packet_header_length;
 uint16_t PACKET_HEADER_LENGTH;
 bool authed = false;
 
+bool givelink_authed() {
+    return authed;
+}
+
 void givelink_set_auth(bool auth_info) {
     authed = auth_info;
     if (auth_info) {

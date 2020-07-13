@@ -362,6 +362,14 @@ void loop() {
         #endif
     }
 
+    if (!givelink_authed()) {
+        givelink_reset(m);
+        givelink_set_id(m, id);
+        givelink_set_type(m, AUTHREQ);
+        id ++;
+        send_packet();
+    }
+
     #if ENABLE_POWER_DOWN
     if (can_power_down) {
         if (wake_timer + wake_delay < get_current_time()) {

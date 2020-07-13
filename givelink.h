@@ -51,6 +51,8 @@ uint16_t givelink_get_length(const givelink_t *m);
 void givelink_free(givelink_t * m);
 bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
 
+bool givelink_authed();
+
 #ifdef __cplusplus
 }
 #endif
