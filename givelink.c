@@ -140,6 +140,10 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
         givelink_set_addr(m -> data, m -> length - TYPE_LENGTH);
     }
 
+    if (m -> type == ERROR) {
+        givelink_set_auth(false);
+    }
+
     return true;
 }
 
