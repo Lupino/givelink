@@ -16,6 +16,8 @@ extern "C" {
 #define PING      5
 #define SUCCESS   6
 #define ERROR     7
+#define AUTHREQ   8
+#define AUTHRES   9
 
 #define MAGIC_LENGTH 4
 

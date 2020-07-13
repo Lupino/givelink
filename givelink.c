@@ -3,24 +3,57 @@
 #include "givelink.h"
 #include <string.h>
 
-uint8_t *packet_header;
+uint8_t *raw_packet_header;
+uint16_t raw_packet_header_length;
+
+uint8_t *addr_packet_header;
+uint16_t addr_packet_header_length;
+
+
 uint16_t PACKET_HEADER_LENGTH;
+bool authed = false;
+
+void givelink_set_auth(bool auth_info) {
+    authed = auth_info;
+    if (auth_info) {
+        PACKET_HEADER_LENGTH = addr_packet_header_length;
+    } else {
+        PACKET_HEADER_LENGTH = raw_packet_header_length;
+    }
+}
 
 void givelink_init(const char * hex_key, const char * hex_token) {
     uint16_t KEY_LENGTH = strlen(hex_key) / 2;
     uint16_t TOKEN_LENGTH = strlen(hex_token) / 2;
 
-    PACKET_HEADER_LENGTH = MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH;
+    raw_packet_header_length = MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH;
 
-    packet_header = malloc(PACKET_HEADER_LENGTH);
-    memcpy(packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
-    packet_header[MAGIC_LENGTH] = KEY_LENGTH;
-    memcpy(packet_header+MAGIC_LENGTH+1,
+    raw_packet_header = malloc(raw_packet_header_length);
+    memcpy(raw_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
+    raw_packet_header[MAGIC_LENGTH] = KEY_LENGTH;
+    memcpy(raw_packet_header+MAGIC_LENGTH+1,
             (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
 
-    packet_header[MAGIC_LENGTH+1+KEY_LENGTH] = TOKEN_LENGTH;
-    memcpy(packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1,
+    raw_packet_header[MAGIC_LENGTH+1+KEY_LENGTH] = TOKEN_LENGTH;
+    memcpy(raw_packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1,
             (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
+
+    PACKET_HEADER_LENGTH = raw_packet_header_length;
+    givelink_set_auth(false);
+}
+
+void givelink_set_addr(const uint8_t * addr, const uint16_t addr_length) {
+    addr_packet_header_length = MAGIC_LENGTH + 1 + addr_length + 1 + 0;
+
+    addr_packet_header = malloc(addr_packet_header_length);
+    memcpy(addr_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
+    addr_packet_header[MAGIC_LENGTH] = addr_length;
+    memcpy(addr_packet_header+MAGIC_LENGTH+1, addr, addr_length);
+
+    addr_packet_header[MAGIC_LENGTH+1+addr_length] = 0;
+
+    PACKET_HEADER_LENGTH = addr_packet_header_length;
+    givelink_set_auth(true);
 }
 
 uint16_t to_uint16(const uint8_t h, const uint8_t l) {
@@ -46,7 +79,7 @@ void swap_edition(uint8_t * payload) {
 }
 
 void givelink_to_binary_raw(const givelink_t * m, uint8_t * payload) {
-    memcpy(payload, packet_header, PACKET_HEADER_LENGTH);
+    memcpy(payload, raw_packet_header, PACKET_HEADER_LENGTH);
     memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m,
             givelink_get_length(m) - PACKET_HEADER_LENGTH);
     swap_edition(payload);
@@ -99,6 +132,10 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
 
     m -> data[m -> length - TYPE_LENGTH] = '\0';
 
+    if (m -> type == AUTHRES) {
+        givelink_set_addr(m -> data, m -> length - TYPE_LENGTH);
+    }
+
     return true;
 }
 
@@ -147,6 +184,9 @@ void givelink_set_type(givelink_t * m, const uint8_t type) {
     m->type = type;
     m->length = TYPE_LENGTH;
     m->data[0] = '\0';
+    if (type == AUTHREQ) {
+        givelink_set_auth(false);
+    }
 }
 
 void givelink_set_data(givelink_t * m, const uint8_t * data,
@@ -184,9 +224,9 @@ bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
     return crc == crc0;
 }
 
-bool givelink_check_packet_header(const uint8_t * payload) {
+bool givelink_check_packet_header(const uint8_t * payload, const uint8_t * header) {
     for (uint16_t i = 0; i < PACKET_HEADER_LENGTH; i ++) {
-        if (packet_header[i] != payload[i]) {
+        if (header[i] != payload[i]) {
             return false;
         }
     }
@@ -206,7 +246,7 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
     headLen = headLen + 1;
     if (givelink_discover_magic(payload, headLen)) {
         if (headLen == PACKET_HEADER_LENGTH) {
-            if (!givelink_check_packet_header(payload)) {
+            if (!givelink_check_packet_header(payload, authed ? addr_packet_header : raw_packet_header)) {
                 // wrong packet, ignore
                 headLen = 0;
             }
