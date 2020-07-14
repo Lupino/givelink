@@ -141,7 +141,7 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
     }
 
     if (m -> type == ERROR) {
-        givelink_set_auth(false);
+        authed = false;
     }
 
     return true;
