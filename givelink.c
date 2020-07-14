@@ -83,7 +83,11 @@ void swap_edition(uint8_t * payload) {
 }
 
 void givelink_to_binary_raw(const givelink_t * m, uint8_t * payload) {
-    memcpy(payload, raw_packet_header, PACKET_HEADER_LENGTH);
+    if (authed) {
+        memcpy(payload, addr_packet_header, addr_packet_header_length);
+    } else {
+        memcpy(payload, raw_packet_header, raw_packet_header_length);
+    }
     memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m,
             givelink_get_length(m) - PACKET_HEADER_LENGTH);
     swap_edition(payload);
