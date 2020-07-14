@@ -82,7 +82,7 @@ unsigned long auth_timer = get_current_time();
 unsigned long auth_delay = 1000;
 
 unsigned long send_timer = get_current_time();
-unsigned long send_delay = 3000;
+unsigned long send_delay = 300000;
 uint16_t id = 0;
 
 uint16_t headLen = 0;
