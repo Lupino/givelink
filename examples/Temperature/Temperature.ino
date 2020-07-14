@@ -78,6 +78,9 @@ uint8_t outByte = 0;
 unsigned long timedelta = 0;
 unsigned long get_current_time();
 
+unsigned long auth_timer = get_current_time();
+unsigned long auth_delay = 1000;
+
 unsigned long send_timer = get_current_time();
 unsigned long send_delay = 60000;
 uint16_t id = 0;
@@ -363,11 +366,14 @@ void loop() {
     }
 
     if (!givelink_authed()) {
-        givelink_reset(m);
-        givelink_set_id(m, id);
-        givelink_set_type(m, AUTHREQ);
-        id ++;
-        send_packet();
+        if (auth_timer + auth_delay < get_current_time()) {
+            givelink_reset(m);
+            givelink_set_id(m, id);
+            givelink_set_type(m, AUTHREQ);
+            id ++;
+            send_packet();
+            auth_timer = get_current_time();
+        }
     }
 
     #if ENABLE_POWER_DOWN
