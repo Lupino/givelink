@@ -2,13 +2,13 @@
 
 #define DEBUG 0
 
-#define USE_L76X 1
+#define USE_L76X 0
 
 #define USE_MICROBIT 0
 #define MICROBIT_RX 14
 #define MICROBIT_TX 15
 
-#define USE_DHT 0
+#define USE_DHT 1
 #define DHTPIN 9     // what digital pin we're connected to
 // Uncomment whatever type you're using!
 #define DHTTYPE DHT11   // DHT 11
@@ -18,7 +18,7 @@
 #define USE_DS18B20 0
 #define ONE_WIRE_BUS 9
 
-#define ENABLE_POWER_DOWN 1
+#define ENABLE_POWER_DOWN 0
 
 #define MAX_PAYLOAD_LENGTH 127
 #define JSON_LENGTH 50
@@ -82,15 +82,15 @@ unsigned long auth_timer = get_current_time();
 unsigned long auth_delay = 1000;
 
 unsigned long send_timer = get_current_time();
-unsigned long send_delay = 60000;
+unsigned long send_delay = 3000;
 uint16_t id = 0;
 
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
 
-#define HEX_KEY "e72ae1431038b939f8"
-#define HEX_TOKEN "e01fbebf6b0146039784884e4e5b1080"
+#define HEX_KEY "bdde6db9f3daf38f3a"
+#define HEX_TOKEN "14b61d617a9c428a95542dbd097d7a0e"
 
 givelink_t * m = givelink_new();
 
