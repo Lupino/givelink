@@ -145,7 +145,7 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
     }
 
     if (m -> type == ERROR) {
-        authed = false;
+        givelink_set_auth(false);
     }
 
     return true;
@@ -180,6 +180,7 @@ void givelink_reset(givelink_t * m) {
     m -> length = TYPE_LENGTH;
     m -> crc16 = 0;
     m -> type = PING;
+    m -> data[0] = '\0';
 }
 
 void givelink_free(givelink_t * m) {
@@ -194,11 +195,6 @@ void givelink_set_id(givelink_t * m, const uint16_t id) {
 
 void givelink_set_type(givelink_t * m, const uint8_t type) {
     m->type = type;
-    m->length = TYPE_LENGTH;
-    m->data[0] = '\0';
-    if (type == AUTHREQ) {
-        givelink_set_auth(false);
-    }
 }
 
 void givelink_set_data(givelink_t * m, const uint8_t * data,
