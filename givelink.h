@@ -18,6 +18,7 @@ extern "C" {
 #define ERROR     7
 #define AUTHREQ   8
 #define AUTHRES   9
+#define TRNS      10
 
 #define MAGIC_LENGTH 4
 
