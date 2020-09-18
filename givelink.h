@@ -34,11 +34,11 @@ typedef struct {
     uint16_t length;
     uint16_t crc16;
     uint8_t  type;
-    uint8_t  data[0];
+    uint8_t  *data;
 } __attribute__ ((packed)) givelink_t;
 
 void givelink_init(const char * hex_key, const char * hex_token);
-givelink_t * givelink_new();
+givelink_t * givelink_new(const uint16_t length);
 void givelink_reset(givelink_t * m);
 void givelink_set_id(givelink_t * m, const uint16_t id);
 void givelink_set_type(givelink_t * m, const uint8_t type);

@@ -30,7 +30,7 @@ int main() {
     memcpy(buff, (uint8_t *)unhex(hex_buff, hex_buff_size), buff_size);
 
     givelink_init(hex_key, hex_token);
-    givelink_t * data = givelink_new();
+    givelink_t * data = givelink_new(255);
 
     uint8_t payload[200];
     uint16_t len = 0;

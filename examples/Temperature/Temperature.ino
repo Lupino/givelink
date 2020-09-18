@@ -92,7 +92,7 @@ uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
 #define HEX_KEY "bdde6db9f3daf38f3a"
 #define HEX_TOKEN "14b61d617a9c428a95542dbd097d7a0e"
 
-givelink_t * m = givelink_new();
+givelink_t * m = givelink_new(MAX_PAYLOAD_LENGTH);
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);

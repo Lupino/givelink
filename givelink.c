@@ -165,13 +165,14 @@ uint16_t givelink_get_data_length(const uint8_t * payload,
     return to_uint16(lenh, lenl);
 }
 
-givelink_t * givelink_new() {
+givelink_t * givelink_new(const uint16_t length) {
     givelink_t * m = (givelink_t *)malloc(MINI_PACKET_LENGTH);
 
     m -> id = 0;
     m -> length = TYPE_LENGTH;
     m -> crc16 = 0;
     m -> type = PING;
+    m -> data = malloc(length - MINI_PACKET_LENGTH);
     return m;
 }
 
