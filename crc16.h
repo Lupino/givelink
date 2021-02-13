@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 #include <stdlib.h>
-#include <inttypes.h>
+#include <stdint.h>
 uint16_t crc_16( const unsigned char *input_str, size_t num_bytes );
 #ifdef __cplusplus
 }
