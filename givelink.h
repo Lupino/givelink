@@ -21,6 +21,7 @@ extern "C" {
 #define TRNS      10
 
 #define MAGIC_LENGTH 4
+#define ADDR_LENGTH 4
 
 #define TYPE_LENGTH 1
 
@@ -41,8 +42,9 @@ typedef struct {
 } __attribute__ ((packed)) givelink_t;
 #endif
 
-void givelink_init(const char * hex_key, const char * hex_token);
-givelink_t * givelink_new(const uint16_t length);
+givelink_t * givelink_new(uint8_t *data);
+void givelink_format_auth(const uint8_t * key, const uint8_t * token, const uint16_t key_len, const uint16_t token_len, uint8_t * auth_info, uint16_t * auth_info_len);
+void givelink_init(const uint8_t * auth_info, const uint16_t auth_info_len);
 void givelink_reset(givelink_t * m);
 void givelink_set_id(givelink_t * m, const uint16_t id);
 void givelink_set_type(givelink_t * m, const uint8_t type);
@@ -53,7 +55,6 @@ bool givelink_from_binary(givelink_t * m, const uint8_t * payload, const uint16_
 
 uint16_t givelink_get_length(const givelink_t *m);
 
-void givelink_free(givelink_t * m);
 bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
 
 bool givelink_authed();

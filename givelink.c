@@ -1,14 +1,12 @@
 #include "crc16.h"
-#include "unhex.h"
 #include "givelink.h"
 #include <string.h>
 
 uint8_t *raw_packet_header;
 uint16_t raw_packet_header_length;
 
-uint8_t *addr_packet_header;
+uint8_t addr_packet_header[MAGIC_LENGTH + 1 + ADDR_LENGTH + 1 + 0];
 uint16_t addr_packet_header_length;
-
 
 uint16_t PACKET_HEADER_LENGTH;
 bool authed = false;
@@ -26,30 +24,27 @@ void givelink_set_auth(bool auth_info) {
     }
 }
 
-void givelink_init(const char * hex_key, const char * hex_token) {
-    uint16_t KEY_LENGTH = strlen(hex_key) / 2;
-    uint16_t TOKEN_LENGTH = strlen(hex_token) / 2;
+void givelink_format_auth(const uint8_t * key, const uint8_t * token, const uint16_t key_len, const uint16_t token_len, uint8_t * auth_info, uint16_t * auth_info_len) {
+    *auth_info_len = MAGIC_LENGTH + 1 + key_len + 1 + token_len;
 
-    raw_packet_header_length = MAGIC_LENGTH + 1 + KEY_LENGTH + 1 + TOKEN_LENGTH;
+    memcpy(auth_info, (uint8_t *)GLP0, MAGIC_LENGTH);
+    auth_info[MAGIC_LENGTH] = key_len;
+    memcpy(auth_info+MAGIC_LENGTH+1, key, key_len);
 
-    raw_packet_header = malloc(raw_packet_header_length);
+    auth_info[MAGIC_LENGTH+1+key_len] = token_len;
+    memcpy(auth_info+MAGIC_LENGTH+1+key_len+1, token, token_len);
+}
+
+void givelink_init(const uint8_t * auth_info, const uint16_t auth_info_len) {
+    raw_packet_header = (uint8_t *)auth_info;
+    raw_packet_header_length = auth_info_len;
     memcpy(raw_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
-    raw_packet_header[MAGIC_LENGTH] = KEY_LENGTH;
-    memcpy(raw_packet_header+MAGIC_LENGTH+1,
-            (uint8_t *)unhex((const uint8_t *)hex_key, KEY_LENGTH * 2), KEY_LENGTH);
-
-    raw_packet_header[MAGIC_LENGTH+1+KEY_LENGTH] = TOKEN_LENGTH;
-    memcpy(raw_packet_header+MAGIC_LENGTH+1+KEY_LENGTH+1,
-            (uint8_t *)unhex((const uint8_t *)hex_token, TOKEN_LENGTH * 2), TOKEN_LENGTH);
-
     PACKET_HEADER_LENGTH = raw_packet_header_length;
     givelink_set_auth(false);
 }
 
 void givelink_set_addr(const uint8_t * addr, const uint16_t addr_length) {
     addr_packet_header_length = MAGIC_LENGTH + 1 + addr_length + 1 + 0;
-
-    addr_packet_header = malloc(addr_packet_header_length);
     memcpy(addr_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
     addr_packet_header[MAGIC_LENGTH] = addr_length;
     memcpy(addr_packet_header+MAGIC_LENGTH+1, addr, addr_length);
@@ -165,15 +160,14 @@ uint16_t givelink_get_data_length(const uint8_t * payload,
     return to_uint16(lenh, lenl);
 }
 
-givelink_t * givelink_new(const uint16_t length) {
-    givelink_t * m = (givelink_t *)malloc(MINI_PACKET_LENGTH);
-
-    m -> id = 0;
-    m -> length = TYPE_LENGTH;
-    m -> crc16 = 0;
-    m -> type = PING;
-    m -> data = malloc(length - MINI_PACKET_LENGTH);
-    return m;
+givelink_t * givelink_new(uint8_t *data) {
+    givelink_t m;
+    m.id = 0;
+    m.length = TYPE_LENGTH;
+    m.crc16 = 0;
+    m.type = PING;
+    m.data = data;
+    return &m;
 }
 
 void givelink_reset(givelink_t * m) {
@@ -182,12 +176,6 @@ void givelink_reset(givelink_t * m) {
     m -> crc16 = 0;
     m -> type = PING;
     m -> data[0] = '\0';
-}
-
-void givelink_free(givelink_t * m) {
-    if (m) {
-        free(m);
-    }
 }
 
 void givelink_set_id(givelink_t * m, const uint16_t id) {
