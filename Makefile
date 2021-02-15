@@ -1,6 +1,5 @@
 SRC=crc16.c \
 	givelink.c \
-	unhex.c \
 	test/main.c
 
 CFLAGS=-D__arm__ -I. -Itest

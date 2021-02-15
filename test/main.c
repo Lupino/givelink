@@ -2,13 +2,26 @@
 #include <string.h>
 
 #include "givelink.h"
-#include "unhex.h"
 
-uint16_t hex_buff_size = 118;
-uint8_t hex_buff[] = "4c4d513009e72ae1431038b939f810e01fbebf6b0146039784884e4e5b1080000100147b22047b2274656d7065726174757265223a2033307d0d0a";
+uint16_t buff_size = 59;
+uint8_t buff[] = {
+    0x4c, 0x4d, 0x51, 0x30, 0x09, 0xe7, 0x2a, 0xe1, 0x43, 0x10, 0x38, 0xb9,
+    0x39, 0xf8, 0x10, 0xe0, 0x1f, 0xbe, 0xbf, 0x6b, 0x01, 0x46, 0x03, 0x97,
+    0x84, 0x88, 0x4e, 0x4e, 0x5b, 0x10, 0x80, 0x00, 0x01, 0x00, 0x14, 0x7b,
+    0x22, 0x04, 0x7b, 0x22, 0x74, 0x65, 0x6d, 0x70, 0x65, 0x72, 0x61, 0x74,
+    0x75, 0x72, 0x65, 0x22, 0x3a, 0x20, 0x33, 0x30, 0x7d, 0x0d, 0x0a
+};
 
-char hex_key[] = "e72ae1431038b939f8";
-char hex_token[] = "e01fbebf6b0146039784884e4e5b1080";
+uint16_t key_size = 9;
+uint8_t key[] = { 0xe7, 0x2a, 0xe1, 0x43, 0x10, 0x38, 0xb9, 0x39, 0xf8 };
+uint16_t token_size = 16;
+uint8_t token[] = {
+    0xe0, 0x1f, 0xbe, 0xbf, 0x6b, 0x01, 0x46, 0x03, 0x97, 0x84, 0x88, 0x4e,
+    0x4e, 0x5b, 0x10, 0x80
+};
+
+uint8_t ctx_buff[35];
+uint8_t data_buff[127];
 
 void print_hex(const uint8_t * str, const uint16_t length) {
     for (uint16_t i = 0; i < length; i ++) {
@@ -23,32 +36,29 @@ void print_data(uint8_t * data, const uint16_t length) {
 }
 
 int main() {
+    givelink_context_t * ctx = givelink_context_new(ctx_buff);
+    givelink_context_set_key(ctx, key, key_size);
+    givelink_context_set_token(ctx, token, token_size);
 
-    uint16_t buff_size = hex_buff_size / 2;
-    uint8_t buff[buff_size];
-
-    memcpy(buff, (uint8_t *)unhex(hex_buff, hex_buff_size), buff_size);
-
-    givelink_init(hex_key, hex_token);
-    givelink_t * data = givelink_new(255);
+    givelink_t * data = givelink_new(data_buff);
 
     uint8_t payload[200];
     uint16_t len = 0;
 
     for (uint16_t i = 0; i < buff_size; i ++) {
-        if (givelink_recv(payload, &len, buff[i])) {
+        if (givelink_recv(ctx, payload, &len, buff[i])) {
             printf("got\n");
             break;
         }
     }
 
     print_hex(payload, len);
-    givelink_from_binary(data, payload, len);
-    printf("payloadLength: %d\n", givelink_get_length(data));
+    givelink_from_binary(ctx, data, payload, len);
+    printf("payloadLength: %d\n", givelink_get_length(ctx, data));
 
     printf("data length: %d\n", data -> length);
     print_data(data -> data, data -> length - 1);
 
-    givelink_to_binary(data, payload);
-    print_hex(payload, givelink_get_length(data));
+    givelink_to_binary(ctx, data, payload);
+    print_hex(payload, givelink_get_length(ctx, data));
 }
