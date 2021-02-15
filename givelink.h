@@ -51,7 +51,7 @@ typedef struct {
     bool authed;
 } givelink_context_t;
 
-givelink_t * givelink_new(uint8_t *data);
+givelink_t * givelink_init(givelink_t * m, uint8_t *data);
 void givelink_reset(givelink_t * m);
 void givelink_set_id(givelink_t * m, const uint16_t id);
 void givelink_set_type(givelink_t * m, const uint8_t type);
@@ -66,7 +66,7 @@ bool givelink_recv(givelink_context_t * ctx, uint8_t * payload, uint16_t * lengt
 
 bool givelink_authed(givelink_context_t * ctx);
 void givelink_set_auth(givelink_context_t * ctx, bool authed);
-givelink_context_t * givelink_context_new(uint8_t * unauth_header);
+givelink_context_t * givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header);
 void givelink_context_set_key(givelink_context_t * ctx, const uint8_t * key, const uint16_t key_len);
 void givelink_context_set_token(givelink_context_t * ctx, const uint8_t * token, const uint16_t token_len);
 

@@ -22,34 +22,36 @@ void givelink_context_set_magic(givelink_context_t * ctx) {
     memcpy(ctx->authed_header, (uint8_t *)GLP0, MAGIC_LENGTH);
 }
 
-givelink_context_t * givelink_context_new(uint8_t * unauth_header) {
+givelink_context_t * givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header) {
     uint8_t addr_packet_header[MAGIC_LENGTH + 1 + ADDR_LENGTH + 1 + 0];
-    givelink_context_t ctx;
-    ctx.authed = false;
-    ctx.authed_header_length = 0;
-    ctx.unauth_header_length = 0;
-    ctx.authed_header = addr_packet_header;
-    ctx.unauth_header = unauth_header;
-    givelink_context_set_magic(&ctx);
-    return &ctx;
+    ctx->authed = false;
+    ctx->authed_header_length = 0;
+    ctx->unauth_header_length = 0;
+    ctx->authed_header = addr_packet_header;
+    ctx->unauth_header = unauth_header;
+    givelink_context_set_magic(ctx);
+    return ctx;
 }
 
 void givelink_context_set_key(givelink_context_t * ctx, const uint8_t * key, const uint16_t key_len) {
     ctx->unauth_header[ctx->unauth_header_length] = key_len;
     ctx->unauth_header_length += 1;
     memcpy(ctx->unauth_header+ctx->unauth_header_length, key, key_len);
+    ctx->unauth_header_length += key_len;
 }
 
 void givelink_context_set_token(givelink_context_t * ctx, const uint8_t * token, const uint16_t token_len) {
     ctx->unauth_header[ctx->unauth_header_length] = token_len;
     ctx->unauth_header_length += 1;
     memcpy(ctx->unauth_header+ctx->unauth_header_length, token, token_len);
+    ctx->unauth_header_length += token_len;
 }
 
 void givelink_context_set_addr(givelink_context_t * ctx, const uint8_t * addr, const uint16_t addr_len) {
     ctx->authed_header[ctx->authed_header_length] = addr_len;
     ctx->authed_header_length += 1;
     memcpy(ctx->authed_header+ctx->authed_header_length, addr, addr_len);
+    ctx->authed_header_length += addr_len;
     ctx->authed_header[ctx->authed_header_length] = 0;
     ctx->authed_header_length += 1;
 }
@@ -160,14 +162,13 @@ uint16_t givelink_get_data_length(givelink_context_t * ctx, const uint8_t * payl
     return to_uint16(lenh, lenl);
 }
 
-givelink_t * givelink_new(uint8_t *data) {
-    givelink_t m;
-    m.id = 0;
-    m.length = TYPE_LENGTH;
-    m.crc16 = 0;
-    m.type = PING;
-    m.data = data;
-    return &m;
+givelink_t * givelink_init(givelink_t * m, uint8_t *data) {
+    m->id = 0;
+    m->length = TYPE_LENGTH;
+    m->crc16 = 0;
+    m->type = PING;
+    m->data = data;
+    return m;
 }
 
 void givelink_reset(givelink_t * m) {
