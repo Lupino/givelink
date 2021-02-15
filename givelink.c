@@ -2,57 +2,56 @@
 #include "givelink.h"
 #include <string.h>
 
-uint8_t *raw_packet_header;
-uint16_t raw_packet_header_length;
-
-uint8_t addr_packet_header[MAGIC_LENGTH + 1 + ADDR_LENGTH + 1 + 0];
-uint16_t addr_packet_header_length;
-
-uint16_t PACKET_HEADER_LENGTH;
-bool authed = false;
-
-bool givelink_authed() {
-    return authed;
+bool givelink_authed(givelink_context_t * ctx) {
+    return ctx->authed;
 }
 
-void givelink_set_auth(bool auth_info) {
-    authed = auth_info;
-    if (auth_info) {
-        PACKET_HEADER_LENGTH = addr_packet_header_length;
+void givelink_set_auth(givelink_context_t * ctx, bool authed) {
+    ctx->authed = authed;
+    if (authed) {
+        ctx->header_length = ctx->authed_header_length;
     } else {
-        PACKET_HEADER_LENGTH = raw_packet_header_length;
+        ctx->header_length = ctx->unauth_header_length;
     }
 }
 
-void givelink_format_auth(const uint8_t * key, const uint8_t * token, const uint16_t key_len, const uint16_t token_len, uint8_t * auth_info, uint16_t * auth_info_len) {
-    *auth_info_len = MAGIC_LENGTH + 1 + key_len + 1 + token_len;
-
-    memcpy(auth_info, (uint8_t *)GLP0, MAGIC_LENGTH);
-    auth_info[MAGIC_LENGTH] = key_len;
-    memcpy(auth_info+MAGIC_LENGTH+1, key, key_len);
-
-    auth_info[MAGIC_LENGTH+1+key_len] = token_len;
-    memcpy(auth_info+MAGIC_LENGTH+1+key_len+1, token, token_len);
+void givelink_context_set_magic(givelink_context_t * ctx) {
+    ctx->unauth_header_length = MAGIC_LENGTH;
+    memcpy(ctx->unauth_header, (uint8_t *)GLP0, MAGIC_LENGTH);
+    ctx->authed_header_length = MAGIC_LENGTH;
+    memcpy(ctx->authed_header, (uint8_t *)GLP0, MAGIC_LENGTH);
 }
 
-void givelink_init(const uint8_t * auth_info, const uint16_t auth_info_len) {
-    raw_packet_header = (uint8_t *)auth_info;
-    raw_packet_header_length = auth_info_len;
-    memcpy(raw_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
-    PACKET_HEADER_LENGTH = raw_packet_header_length;
-    givelink_set_auth(false);
+givelink_context_t * givelink_context_new(uint8_t * unauth_header) {
+    uint8_t addr_packet_header[MAGIC_LENGTH + 1 + ADDR_LENGTH + 1 + 0];
+    givelink_context_t ctx;
+    ctx.authed = false;
+    ctx.authed_header_length = 0;
+    ctx.unauth_header_length = 0;
+    ctx.authed_header = addr_packet_header;
+    ctx.unauth_header = unauth_header;
+    givelink_context_set_magic(&ctx);
+    return &ctx;
 }
 
-void givelink_set_addr(const uint8_t * addr, const uint16_t addr_length) {
-    addr_packet_header_length = MAGIC_LENGTH + 1 + addr_length + 1 + 0;
-    memcpy(addr_packet_header, (uint8_t *)GLP0, MAGIC_LENGTH);
-    addr_packet_header[MAGIC_LENGTH] = addr_length;
-    memcpy(addr_packet_header+MAGIC_LENGTH+1, addr, addr_length);
+void givelink_context_set_key(givelink_context_t * ctx, const uint8_t * key, const uint16_t key_len) {
+    ctx->unauth_header[ctx->unauth_header_length] = key_len;
+    ctx->unauth_header_length += 1;
+    memcpy(ctx->unauth_header+ctx->unauth_header_length, key, key_len);
+}
 
-    addr_packet_header[MAGIC_LENGTH+1+addr_length] = 0;
+void givelink_context_set_token(givelink_context_t * ctx, const uint8_t * token, const uint16_t token_len) {
+    ctx->unauth_header[ctx->unauth_header_length] = token_len;
+    ctx->unauth_header_length += 1;
+    memcpy(ctx->unauth_header+ctx->unauth_header_length, token, token_len);
+}
 
-    PACKET_HEADER_LENGTH = addr_packet_header_length;
-    givelink_set_auth(true);
+void givelink_context_set_addr(givelink_context_t * ctx, const uint8_t * addr, const uint16_t addr_len) {
+    ctx->authed_header[ctx->authed_header_length] = addr_len;
+    ctx->authed_header_length += 1;
+    memcpy(ctx->authed_header+ctx->authed_header_length, addr, addr_len);
+    ctx->authed_header[ctx->authed_header_length] = 0;
+    ctx->authed_header_length += 1;
 }
 
 uint16_t to_uint16(const uint8_t h, const uint8_t l) {
@@ -71,92 +70,93 @@ void swap_one(uint8_t * payload, const int offset) {
     payload[offset + 1] = tmp;
 }
 
-void swap_edition(uint8_t * payload) {
-    swap_one(payload, PACKET_HEADER_LENGTH + 4); // crc16
-    swap_one(payload, PACKET_HEADER_LENGTH + 2); // length
-    swap_one(payload, PACKET_HEADER_LENGTH);     // id
+void swap_edition(givelink_context_t * ctx, uint8_t * payload) {
+    swap_one(payload, ctx->header_length + 4); // crc16
+    swap_one(payload, ctx->header_length + 2); // length
+    swap_one(payload, ctx->header_length);     // id
 }
 
-void givelink_to_binary_raw(const givelink_t * m, uint8_t * payload) {
-    if (authed) {
-        memcpy(payload, addr_packet_header, addr_packet_header_length);
+void givelink_to_binary_raw(givelink_context_t * ctx, const givelink_t * m, uint8_t * payload) {
+    if (ctx->authed) {
+        memcpy(payload, ctx->authed_header, ctx->authed_header_length);
     } else {
-        memcpy(payload, raw_packet_header, raw_packet_header_length);
+        memcpy(payload, ctx->unauth_header, ctx->unauth_header_length);
     }
-    memcpy(payload+PACKET_HEADER_LENGTH, (const uint8_t *)m, MINI_PACKET_LENGTH);
-    memcpy(payload+PACKET_HEADER_LENGTH+MINI_PACKET_LENGTH, m->data, m->length - TYPE_LENGTH);
-    swap_edition(payload);
+    memcpy(payload+ctx->header_length, (const uint8_t *)m, MINI_PACKET_LENGTH);
+    memcpy(payload+ctx->header_length+MINI_PACKET_LENGTH, m->data, m->length - TYPE_LENGTH);
+    swap_edition(ctx, payload);
 }
 
-void givelink_to_binary(const givelink_t * m, uint8_t * payload) {
-    givelink_to_binary_raw(m, payload);
+void givelink_to_binary(givelink_context_t * ctx, const givelink_t * m, uint8_t * payload) {
+    givelink_to_binary_raw(ctx, m, payload);
 
-    payload[PACKET_HEADER_LENGTH + 4] = 0;
-    payload[PACKET_HEADER_LENGTH + 5] = 0;
+    payload[ctx->header_length + 4] = 0;
+    payload[ctx->header_length + 5] = 0;
 
-    uint16_t crc = crc_16(payload, givelink_get_length(m));
+    uint16_t crc = crc_16(payload, givelink_get_length(ctx, m));
 
     uint8_t crch;
     uint8_t crcl;
 
     from_uint16(crc, &crch, &crcl);
 
-    payload[PACKET_HEADER_LENGTH + 4] = crch;
-    payload[PACKET_HEADER_LENGTH + 5] = crcl;
+    payload[ctx->header_length + 4] = crch;
+    payload[ctx->header_length + 5] = crcl;
 }
 
-bool givelink_from_binary(givelink_t * m, const uint8_t * payload,
+bool givelink_from_binary(givelink_context_t * ctx, givelink_t * m, const uint8_t * payload,
         const uint16_t length) {
-    if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH) {
+    if (length < ctx->header_length + MINI_PACKET_LENGTH) {
         return false;
     }
 
-    uint8_t idh = payload[PACKET_HEADER_LENGTH];
-    uint8_t idl = payload[PACKET_HEADER_LENGTH + 1];
+    uint8_t idh = payload[ctx->header_length];
+    uint8_t idl = payload[ctx->header_length + 1];
 
     m -> id = to_uint16(idh, idl);
 
-    uint8_t lenh = payload[PACKET_HEADER_LENGTH + 2];
-    uint8_t lenl = payload[PACKET_HEADER_LENGTH + 3];
+    uint8_t lenh = payload[ctx->header_length + 2];
+    uint8_t lenl = payload[ctx->header_length + 3];
 
     m -> length = to_uint16(lenh, lenl);
 
-    uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
-    uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
+    uint8_t crch = payload[ctx->header_length + 4];
+    uint8_t crcl = payload[ctx->header_length + 5];
 
     m -> crc16 = to_uint16(crch, crcl);
 
-    m -> type = payload[PACKET_HEADER_LENGTH + 6];
+    m -> type = payload[ctx->header_length + 6];
 
     if (m -> length > TYPE_LENGTH) {
-        memcpy(m->data, payload + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH,
-                length - PACKET_HEADER_LENGTH - MINI_PACKET_LENGTH);
+        memcpy(m->data, payload + ctx->header_length + MINI_PACKET_LENGTH,
+                length - ctx->header_length - MINI_PACKET_LENGTH);
     }
 
     m -> data[m -> length - TYPE_LENGTH] = '\0';
 
     if (m -> type == AUTHRES) {
-        givelink_set_addr(m -> data, m -> length - TYPE_LENGTH);
+        givelink_context_set_addr(ctx, m->data, m->length - TYPE_LENGTH);
+        givelink_set_auth(ctx, true);
     }
 
     if (m -> type == ERROR) {
-        givelink_set_auth(false);
+        givelink_set_auth(ctx, false);
     }
 
     return true;
 }
 
-uint16_t givelink_get_length(const givelink_t *m) {
-    return m -> length + PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH;
+uint16_t givelink_get_length(givelink_context_t * ctx, const givelink_t *m) {
+    return m -> length + ctx->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
-uint16_t givelink_get_data_length(const uint8_t * payload,
+uint16_t givelink_get_data_length(givelink_context_t * ctx, const uint8_t * payload,
         const uint16_t length) {
-    if (length < PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - TYPE_LENGTH) {
+    if (length < ctx->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH) {
         return 0;
     }
-    uint8_t lenh = payload[PACKET_HEADER_LENGTH + 2];
-    uint8_t lenl = payload[PACKET_HEADER_LENGTH + 3];
+    uint8_t lenh = payload[ctx->header_length + 2];
+    uint8_t lenl = payload[ctx->header_length + 3];
     return to_uint16(lenh, lenl);
 }
 
@@ -205,24 +205,24 @@ bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     return false;
 }
 
-bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
-    uint8_t crch = payload[PACKET_HEADER_LENGTH + 4];
-    uint8_t crcl = payload[PACKET_HEADER_LENGTH + 5];
+bool givelink_check_crc16(givelink_context_t * ctx, uint8_t * payload, uint16_t length) {
+    uint8_t crch = payload[ctx->header_length + 4];
+    uint8_t crcl = payload[ctx->header_length + 5];
     uint16_t crc0 = to_uint16(crch, crcl);
 
-    payload[PACKET_HEADER_LENGTH + 4] = 0x00;
-    payload[PACKET_HEADER_LENGTH + 5] = 0x00;
+    payload[ctx->header_length + 4] = 0x00;
+    payload[ctx->header_length + 5] = 0x00;
 
     uint16_t crc = crc_16(payload, length);
 
-    payload[PACKET_HEADER_LENGTH + 4] = crch;
-    payload[PACKET_HEADER_LENGTH + 5] = crcl;
+    payload[ctx->header_length + 4] = crch;
+    payload[ctx->header_length + 5] = crcl;
 
     return crc == crc0;
 }
 
-bool givelink_check_packet_header(const uint8_t * payload, const uint8_t * header) {
-    for (uint16_t i = 0; i < PACKET_HEADER_LENGTH; i ++) {
+bool givelink_check_packet_header(givelink_context_t * ctx, const uint8_t * payload, const uint8_t * header) {
+    for (uint16_t i = 0; i < ctx->header_length; i ++) {
         if (header[i] != payload[i]) {
             return false;
         }
@@ -236,21 +236,21 @@ void shift_data(uint8_t * payload, uint16_t length) {
     }
 }
 
-bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
+bool givelink_recv(givelink_context_t * ctx, uint8_t * payload, uint16_t * length, uint8_t c) {
     uint16_t headLen = *length;
     bool recved = false;
     payload[headLen] = c;
     headLen = headLen + 1;
     if (givelink_discover_magic(payload, headLen)) {
-        if (headLen == PACKET_HEADER_LENGTH) {
-            if (!givelink_check_packet_header(payload, authed ? addr_packet_header : raw_packet_header)) {
+        if (headLen == ctx->header_length) {
+            if (!givelink_check_packet_header(ctx, payload, ctx->authed ? ctx->authed_header : ctx->unauth_header)) {
                 // wrong packet, ignore
                 headLen = 0;
             }
-        } else if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1) {
-            uint16_t dataLen = givelink_get_data_length(payload, headLen);
-            if (headLen >= PACKET_HEADER_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
-                if (givelink_check_crc16(payload, headLen)) {
+        } else if (headLen >= ctx->header_length + MINI_PACKET_LENGTH - 1) {
+            uint16_t dataLen = givelink_get_data_length(ctx, payload, headLen);
+            if (headLen >= ctx->header_length + MINI_PACKET_LENGTH - 1 + dataLen) {
+                if (givelink_check_crc16(ctx, payload, headLen)) {
                     recved = true;
                 } else {
                     headLen = 0;
