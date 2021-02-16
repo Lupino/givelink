@@ -3,7 +3,7 @@
 #include <string.h>
 
 givelink_context_t * context;
-givelink_t * obj;
+givelink_t * gl_obj;
 
 bool givelink_authed() {
     return context->authed;
@@ -98,8 +98,8 @@ void givelink_to_binary_raw(uint8_t * payload) {
     } else {
         memcpy(payload, context->buffer+context->unauth_header_start, context->unauth_header_length);
     }
-    memcpy(payload+context->header_length, (const uint8_t *)obj, MINI_PACKET_LENGTH);
-    memcpy(payload+context->header_length+MINI_PACKET_LENGTH, obj->data, obj->length - TYPE_LENGTH);
+    memcpy(payload+context->header_length, (const uint8_t *)gl_obj, MINI_PACKET_LENGTH);
+    memcpy(payload+context->header_length+MINI_PACKET_LENGTH, gl_obj->data, gl_obj->length - TYPE_LENGTH);
     swap_edition(payload);
 }
 
@@ -129,33 +129,33 @@ bool givelink_from_binary(const uint8_t * payload,
     uint8_t idh = payload[context->header_length];
     uint8_t idl = payload[context->header_length + 1];
 
-    obj -> id = to_uint16(idh, idl);
+    gl_obj -> id = to_uint16(idh, idl);
 
     uint8_t lenh = payload[context->header_length + 2];
     uint8_t lenl = payload[context->header_length + 3];
 
-    obj -> length = to_uint16(lenh, lenl);
+    gl_obj -> length = to_uint16(lenh, lenl);
 
     uint8_t crch = payload[context->header_length + 4];
     uint8_t crcl = payload[context->header_length + 5];
 
-    obj -> crc16 = to_uint16(crch, crcl);
+    gl_obj -> crc16 = to_uint16(crch, crcl);
 
-    obj -> type = payload[context->header_length + 6];
+    gl_obj -> type = payload[context->header_length + 6];
 
-    if (obj -> length > TYPE_LENGTH) {
-        memcpy(obj->data, payload + context->header_length + MINI_PACKET_LENGTH,
+    if (gl_obj -> length > TYPE_LENGTH) {
+        memcpy(gl_obj->data, payload + context->header_length + MINI_PACKET_LENGTH,
                 length - context->header_length - MINI_PACKET_LENGTH);
     }
 
-    obj -> data[obj -> length - TYPE_LENGTH] = '\0';
+    gl_obj -> data[gl_obj -> length - TYPE_LENGTH] = '\0';
 
-    if (obj -> type == AUTHRES) {
-        givelink_context_set_addr(obj->data, obj->length - TYPE_LENGTH);
+    if (gl_obj -> type == AUTHRES) {
+        givelink_context_set_addr(gl_obj->data, gl_obj->length - TYPE_LENGTH);
         givelink_set_auth(true);
     }
 
-    if (obj -> type == ERROR) {
+    if (gl_obj -> type == ERROR) {
         givelink_set_auth(false);
     }
 
@@ -163,7 +163,7 @@ bool givelink_from_binary(const uint8_t * payload,
 }
 
 uint16_t givelink_get_length() {
-    return obj -> length + context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH;
+    return gl_obj -> length + context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
 uint16_t givelink_get_data_length(const uint8_t * payload,
@@ -177,33 +177,33 @@ uint16_t givelink_get_data_length(const uint8_t * payload,
 }
 
 void givelink_init(givelink_t * m, uint8_t *data) {
-    obj = m;
-    obj->id = 0;
-    obj->length = TYPE_LENGTH;
-    obj->crc16 = 0;
-    obj->type = PING;
-    obj->data = data;
+    gl_obj = m;
+    gl_obj->id = 0;
+    gl_obj->length = TYPE_LENGTH;
+    gl_obj->crc16 = 0;
+    gl_obj->type = PING;
+    gl_obj->data = data;
 }
 
 void givelink_reset() {
-    obj -> id = 0;
-    obj -> length = TYPE_LENGTH;
-    obj -> crc16 = 0;
-    obj -> type = PING;
-    obj -> data[0] = '\0';
+    gl_obj -> id = 0;
+    gl_obj -> length = TYPE_LENGTH;
+    gl_obj -> crc16 = 0;
+    gl_obj -> type = PING;
+    gl_obj -> data[0] = '\0';
 }
 
 void givelink_set_id(const uint16_t id) {
-    obj->id = id;
+    gl_obj->id = id;
 }
 
 void givelink_set_type(const uint8_t type) {
-    obj->type = type;
+    gl_obj->type = type;
 }
 
 void givelink_set_data(const uint8_t * data, const uint16_t length) {
-    memcpy(obj->data, data, length);
-    obj->length = TYPE_LENGTH + length;
+    memcpy(gl_obj->data, data, length);
+    gl_obj->length = TYPE_LENGTH + length;
 }
 
 bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
