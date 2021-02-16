@@ -20,7 +20,7 @@ uint8_t token[] = {
     0x4e, 0x5b, 0x10, 0x80
 };
 
-uint8_t ctx_buff[35];
+uint8_t ctx_buff[50];
 uint8_t data_buff[127];
 
 void print_hex(const uint8_t * str, const uint16_t length) {
@@ -37,14 +37,11 @@ void print_data(uint8_t * data, const uint16_t length) {
 }
 
 int main() {
-    givelink_context_t ctx0;
-    givelink_context_t * ctx = givelink_context_init(&ctx0, ctx_buff);
-    givelink_context_set_key(ctx, key, key_size);
-    givelink_context_set_token(ctx, token, token_size);
-
-    givelink_set_auth(ctx, false);
-
-    print_hex(ctx->unauth_header, ctx->header_length);
+    givelink_context_t ctx;
+    givelink_context_init(&ctx, ctx_buff);
+    givelink_context_set_key(key, key_size);
+    givelink_context_set_token(token, token_size);
+    print_hex(ctx.buffer, ctx.header_length);
 
     givelink_t data0;
     givelink_t * data = givelink_init(&data0, data_buff);
@@ -53,19 +50,19 @@ int main() {
     uint16_t len = 0;
 
     for (uint16_t i = 0; i < buff_size; i ++) {
-        if (givelink_recv(ctx, payload, &len, buff[i])) {
+        if (givelink_recv(payload, &len, buff[i])) {
             printf("got\n");
             break;
         }
     }
 
     print_hex(payload, len);
-    givelink_from_binary(ctx, data, payload, len);
-    printf("payloadLength: %d\n", givelink_get_length(ctx, data));
+    givelink_from_binary(data, payload, len);
+    printf("payloadLength: %d\n", givelink_get_length(data));
 
     printf("data length: %d\n", data -> length);
     print_data(data -> data, data -> length - 1);
 
-    givelink_to_binary(ctx, data, payload);
-    print_hex(payload, givelink_get_length(ctx, data));
+    givelink_to_binary(data, payload);
+    print_hex(payload, givelink_get_length(data));
 }
