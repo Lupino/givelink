@@ -92,7 +92,19 @@ uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
 #define HEX_KEY "bdde6db9f3daf38f3a"
 #define HEX_TOKEN "14b61d617a9c428a95542dbd097d7a0e"
 
-givelink_t * m = givelink_new(MAX_PAYLOAD_LENGTH);
+const uint16_t key_size = 9;
+const uint8_t key[] = { 0xbd, 0xde, 0x6d, 0xb9, 0xf3, 0xda, 0xf3, 0x8f, 0x3a };
+const uint16_t token_size = 16;
+const uint8_t token[] = {
+    0x14, 0xb6, 0x1d, 0x61, 0x7a, 0x9c, 0x42, 0x8a, 0x95, 0x54, 0x2d, 0xbd,
+    0x09, 0x7d, 0x7a, 0x0e
+};
+
+uint8_t ctx_buff[4+1+key_size+1+token_size+4+1+4+1];
+uint8_t obj_buff[MAX_PAYLOAD_LENGTH];
+
+givelink_context_t ctx;
+givelink_t obj;
 
 #if USE_DHT
 DHT dht(DHTPIN, DHTTYPE);
@@ -100,7 +112,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 char jsonPayload[JSON_LENGTH];
 uint16_t length;
-char * tpl = (char *)malloc(30);
+char tpl[JSON_LENGTH];
 
 #if ENABLE_POWER_DOWN
 // power down timer
@@ -111,7 +123,11 @@ unsigned long can_power_down = true;
 
 void setup() {
     // put your setup code here, to run once:
-    givelink_init(HEX_KEY, HEX_TOKEN);
+    givelink_context_init(&ctx, ctx_buff);
+    givelink_context_set_key(key, key_size);
+    givelink_context_set_token(token, token_size);
+    givelink_init(&obj, obj_buff);
+
     GL_SERIAL.begin(115200);
 
     #if USE_L76X
@@ -244,26 +260,26 @@ void loop() {
     while (GL_SERIAL.available() > 0) {
         outByte = GL_SERIAL.read();
         if (givelink_recv(payload, &headLen, outByte)) {
-            if (givelink_from_binary(m, payload, headLen)) {
+            if (givelink_from_binary(payload, headLen)) {
                 #if DEBUG
                 Serial.print(F("Recv Id: "));
-                Serial.print(m -> id);
+                Serial.print(obj.id);
                 Serial.print(F(" Type: "));
-                Serial.print(m -> type);
-                if (m -> length > TYPE_LENGTH) {
+                Serial.print(obj.type);
+                if (obj.length > TYPE_LENGTH) {
                     Serial.print(F(" Data: "));
-                    for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
-                        Serial.write(m -> data[i]);
+                    for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                        Serial.write(obj.data[i]);
                     }
                 }
                 Serial.println();
                 #endif
 
-                if (m -> type == REQUEST) {
-                    givelink_set_type(m, RESPONSE);
+                if (obj.type == REQUEST) {
+                    givelink_set_type(RESPONSE);
 
                     #if USE_DHT
-                    if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)m -> data) == 0) {
+                    if (strcmp("{\"method\":\"get_dht_value\"}", (const char *)obj.data) == 0) {
                         if (!read_dht()) {
                             set_error("read dht error");
                         }
@@ -273,7 +289,7 @@ void loop() {
                     #endif
 
                     #if USE_DS18B20
-                    if (strcmp("{\"method\":\"get_ds18b20_value\"}", (const char *)m -> data) == 0) {
+                    if (strcmp("{\"method\":\"get_ds18b20_value\"}", (const char *)obj.data) == 0) {
                         if (!read_ds18b20()) {
                             set_error("read ds18b20 error");
                         }
@@ -283,7 +299,7 @@ void loop() {
                     #endif
 
                     #if USE_MICROBIT
-                    if (strcmp("{\"method\":\"get_temp\"}", (const char *)m -> data) == 0) {
+                    if (strcmp("{\"method\":\"get_temp\"}", (const char *)obj.data) == 0) {
                         if (!microbit_read_temp()) {
                             set_error("microbit read temperature error");
                         }
@@ -293,7 +309,7 @@ void loop() {
                     #endif
 
                     #if USE_L76X
-                    if (strcmp("{\"method\":\"get_gps\"}", (const char *)m -> data) == 0) {
+                    if (strcmp("{\"method\":\"get_gps\"}", (const char *)obj.data) == 0) {
                         if (!l76x_read_coord(false)) {
                             set_error("l76x read gps error");
                         }
@@ -323,9 +339,9 @@ void loop() {
         #if ENABLE_POWER_DOWN
         can_power_down = false;
         #endif
-        givelink_reset(m);
-        givelink_set_id(m, id);
-        givelink_set_type(m, TELEMETRY);
+        givelink_reset();
+        givelink_set_id(id);
+        givelink_set_type(TELEMETRY);
         id ++;
         #if USE_DHT
         if (read_dht()) {
@@ -367,9 +383,9 @@ void loop() {
 
     if (!givelink_authed()) {
         if (auth_timer + auth_delay < get_current_time()) {
-            givelink_reset(m);
-            givelink_set_id(m, id);
-            givelink_set_type(m, AUTHREQ);
+            givelink_reset();
+            givelink_set_id(id);
+            givelink_set_type(AUTHREQ);
             id ++;
             send_packet();
             auth_timer = get_current_time();
@@ -388,19 +404,19 @@ void loop() {
 void send_packet() {
     #if DEBUG
     Serial.print(F("Send Id: "));
-    Serial.print(m -> id);
+    Serial.print(obj.id);
     Serial.print(F(" Type: "));
-    Serial.print(m -> type);
-    if (m -> length > TYPE_LENGTH) {
+    Serial.print(obj.type);
+    if (obj.length > TYPE_LENGTH) {
         Serial.print(F(" Data: "));
-        for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
-            Serial.write(m -> data[i]);
+        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+            Serial.write(obj.data[i]);
         }
     }
     Serial.println();
     #endif
-    givelink_to_binary(m, payloadSend);
-    length = givelink_get_length(m);
+    givelink_to_binary(payloadSend);
+    length = givelink_get_length();
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(payloadSend[i]);
     }
@@ -556,7 +572,7 @@ void set_error(const char * error) {
 
 void set_data() {
     length = strlen(jsonPayload);
-    givelink_set_data(m, (const uint8_t*)jsonPayload, length);
+    givelink_set_data((const uint8_t*)jsonPayload, length);
 }
 
 char * FC(const __FlashStringHelper *ifsh) {
