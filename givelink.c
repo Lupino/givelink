@@ -23,12 +23,6 @@ void givelink_context_set_unauth_magic() {
     memcpy(context->buffer, (uint8_t *)GLP0, MAGIC_LENGTH);
 }
 
-void givelink_context_set_unauth_magic() {
-    context->unauth_header_start = 0;
-    context->unauth_header_length = MAGIC_LENGTH;
-    memcpy(context->buffer+context->unauth_header_start, (uint8_t *)GLP0, MAGIC_LENGTH);
-}
-
 void givelink_context_set_authed_magic() {
     context->authed_header_start = context->unauth_header_start+context->unauth_header_length;
     context->authed_header_length = MAGIC_LENGTH;
@@ -47,7 +41,6 @@ void givelink_context_init(givelink_context_t * ctx, uint8_t * buffer) {
 
     context->authed = false;
     givelink_context_set_unauth_magic();
-    return context;
 }
 
 void givelink_context_set_key(const uint8_t * key, const uint16_t key_len) {
