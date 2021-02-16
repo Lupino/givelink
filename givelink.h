@@ -52,16 +52,16 @@ typedef struct {
     bool authed;
 } givelink_context_t;
 
-givelink_t * givelink_init(givelink_t * m, uint8_t *data);
-void givelink_reset(givelink_t * m);
-void givelink_set_id(givelink_t * m, const uint16_t id);
-void givelink_set_type(givelink_t * m, const uint8_t type);
-void givelink_set_data(givelink_t * m, const uint8_t * data, const uint16_t length);
+void givelink_init(givelink_t * m, uint8_t *data);
+void givelink_reset();
+void givelink_set_id(const uint16_t id);
+void givelink_set_type(const uint8_t type);
+void givelink_set_data(const uint8_t * data, const uint16_t length);
 
-void givelink_to_binary(const givelink_t * m, uint8_t * payload);
-bool givelink_from_binary(givelink_t * m, const uint8_t * payload, const uint16_t length);
+void givelink_to_binary(uint8_t * payload);
+bool givelink_from_binary(const uint8_t * payload, const uint16_t length);
 
-uint16_t givelink_get_length(const givelink_t *m);
+uint16_t givelink_get_length();
 
 bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
 

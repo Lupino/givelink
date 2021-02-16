@@ -43,8 +43,8 @@ int main() {
     givelink_context_set_token(token, token_size);
     print_hex(ctx.buffer, ctx.header_length);
 
-    givelink_t data0;
-    givelink_t * data = givelink_init(&data0, data_buff);
+    givelink_t data;
+    givelink_init(&data, data_buff);
 
     uint8_t payload[200];
     uint16_t len = 0;
@@ -57,12 +57,12 @@ int main() {
     }
 
     print_hex(payload, len);
-    givelink_from_binary(data, payload, len);
-    printf("payloadLength: %d\n", givelink_get_length(data));
+    givelink_from_binary(payload, len);
+    printf("payloadLength: %d\n", givelink_get_length());
 
-    printf("data length: %d\n", data -> length);
-    print_data(data -> data, data -> length - 1);
+    printf("data length: %d\n", data.length);
+    print_data(data.data, data.length - 1);
 
-    givelink_to_binary(data, payload);
-    print_hex(payload, givelink_get_length(data));
+    givelink_to_binary(payload);
+    print_hex(payload, givelink_get_length());
 }
