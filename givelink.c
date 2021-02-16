@@ -17,45 +17,62 @@ void givelink_set_auth(bool authed) {
     }
 }
 
-void givelink_context_set_magic() {
+void givelink_context_set_unauth_magic() {
+    context->unauth_header_start = 0;
     context->unauth_header_length = MAGIC_LENGTH;
-    memcpy(context->unauth_header, (uint8_t *)GLP0, MAGIC_LENGTH);
-    context->authed_header_length = MAGIC_LENGTH;
-    memcpy(context->authed_header, (uint8_t *)GLP0, MAGIC_LENGTH);
+    memcpy(context->buffer, (uint8_t *)GLP0, MAGIC_LENGTH);
 }
 
-void givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header) {
+void givelink_context_set_unauth_magic() {
+    context->unauth_header_start = 0;
+    context->unauth_header_length = MAGIC_LENGTH;
+    memcpy(context->buffer+context->unauth_header_start, (uint8_t *)GLP0, MAGIC_LENGTH);
+}
+
+void givelink_context_set_authed_magic() {
+    context->authed_header_start = context->unauth_header_start+context->unauth_header_length;
+    context->authed_header_length = MAGIC_LENGTH;
+    memcpy(context->buffer+context->authed_header_start, (uint8_t *)GLP0, MAGIC_LENGTH);
+}
+
+void givelink_context_init(givelink_context_t * ctx, uint8_t * buffer) {
     context = ctx;
-    uint8_t addr_packet_header[MAGIC_LENGTH + 1 + ADDR_LENGTH + 1 + 0];
-    context->authed = false;
-    context->authed_header_length = 0;
+    context->buffer = buffer;
+
+    context->unauth_header_start = 0;
     context->unauth_header_length = 0;
-    context->authed_header = addr_packet_header;
-    context->unauth_header = unauth_header;
-    givelink_context_set_magic();
+
+    context->authed_header_start = 0;
+    context->authed_header_length = 0;
+
+    context->authed = false;
+    givelink_context_set_unauth_magic();
     return context;
 }
 
 void givelink_context_set_key(const uint8_t * key, const uint16_t key_len) {
-    context->unauth_header[context->unauth_header_length] = key_len;
+    context->buffer[context->unauth_header_start+context->unauth_header_length] = key_len;
     context->unauth_header_length += 1;
-    memcpy(context->unauth_header+context->unauth_header_length, key, key_len);
+    memcpy(context->buffer+context->unauth_header_start+context->unauth_header_length, key, key_len);
     context->unauth_header_length += key_len;
 }
 
 void givelink_context_set_token(const uint8_t * token, const uint16_t token_len) {
-    context->unauth_header[context->unauth_header_length] = token_len;
+    context->buffer[context->unauth_header_start+context->unauth_header_length] = token_len;
     context->unauth_header_length += 1;
-    memcpy(context->unauth_header+context->unauth_header_length, token, token_len);
+    memcpy(context->buffer+context->unauth_header_start+context->unauth_header_length, token, token_len);
     context->unauth_header_length += token_len;
+
+    givelink_set_auth(false);
 }
 
 void givelink_context_set_addr(const uint8_t * addr, const uint16_t addr_len) {
-    context->authed_header[context->authed_header_length] = addr_len;
+    givelink_context_set_authed_magic();
+    context->buffer[context->authed_header_start+context->authed_header_length] = addr_len;
     context->authed_header_length += 1;
-    memcpy(context->authed_header+context->authed_header_length, addr, addr_len);
+    memcpy(context->buffer+context->authed_header_start+context->authed_header_length, addr, addr_len);
     context->authed_header_length += addr_len;
-    context->authed_header[context->authed_header_length] = 0;
+    context->buffer[context->authed_header_start+context->authed_header_length] = 0;
     context->authed_header_length += 1;
 }
 
@@ -83,9 +100,9 @@ void swap_edition(uint8_t * payload) {
 
 void givelink_to_binary_raw(const givelink_t * m, uint8_t * payload) {
     if (context->authed) {
-        memcpy(payload, context->authed_header, context->authed_header_length);
+        memcpy(payload, context->buffer+context->authed_header_start, context->authed_header_length);
     } else {
-        memcpy(payload, context->unauth_header, context->unauth_header_length);
+        memcpy(payload, context->buffer+context->unauth_header_start, context->unauth_header_length);
     }
     memcpy(payload+context->header_length, (const uint8_t *)m, MINI_PACKET_LENGTH);
     memcpy(payload+context->header_length+MINI_PACKET_LENGTH, m->data, m->length - TYPE_LENGTH);
@@ -225,9 +242,9 @@ bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
     return crc == crc0;
 }
 
-bool givelink_check_packet_header(const uint8_t * payload, const uint8_t * header) {
+bool givelink_check_packet_header(const uint8_t * payload, const uint16_t header_start) {
     for (uint16_t i = 0; i < context->header_length; i ++) {
-        if (header[i] != payload[i]) {
+        if (context->buffer[header_start+i] != payload[i]) {
             return false;
         }
     }
@@ -247,7 +264,7 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
     headLen = headLen + 1;
     if (givelink_discover_magic(payload, headLen)) {
         if (headLen == context->header_length) {
-            if (!givelink_check_packet_header(payload, context->authed ? context->authed_header : context->unauth_header)) {
+            if (!givelink_check_packet_header(payload, context->authed ? context->authed_header_start : context->unauth_header_start)) {
                 // wrong packet, ignore
                 headLen = 0;
             }

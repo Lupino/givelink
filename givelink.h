@@ -43,9 +43,10 @@ typedef struct {
 #endif
 
 typedef struct {
-    uint8_t * unauth_header;
+    uint8_t * buffer;
+    uint16_t unauth_header_start;
     uint16_t unauth_header_length;
-    uint8_t * authed_header;
+    uint16_t authed_header_start;
     uint16_t authed_header_length;
     uint16_t header_length;
     bool authed;
