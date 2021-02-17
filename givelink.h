@@ -21,7 +21,6 @@ extern "C" {
 #define TRNS      10
 
 #define MAGIC_LENGTH 4
-#define ADDR_LENGTH 4
 
 #define TYPE_LENGTH 1
 
