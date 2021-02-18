@@ -203,6 +203,10 @@ void givelink_set_type(const uint8_t type) {
 
 void givelink_set_data(const uint8_t * data, const uint16_t length) {
     memcpy(gl_obj->data, data, length);
+    givelink_set_data_length(length);
+}
+
+void givelink_set_data_length(const uint16_t length) {
     gl_obj->length = TYPE_LENGTH + length;
 }
 

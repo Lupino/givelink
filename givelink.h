@@ -56,6 +56,7 @@ void givelink_reset();
 void givelink_set_id(const uint16_t id);
 void givelink_set_type(const uint8_t type);
 void givelink_set_data(const uint8_t * data, const uint16_t length);
+void givelink_set_data_length(const uint16_t length);
 
 void givelink_to_binary(uint8_t * payload);
 bool givelink_from_binary(const uint8_t * payload, const uint16_t length);
