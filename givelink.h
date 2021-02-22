@@ -19,6 +19,8 @@ extern "C" {
 #define AUTHREQ   8
 #define AUTHRES   9
 #define TRNS      10
+#define CTRLREQ   11
+#define CTRLRES   12
 
 #define MAGIC_LENGTH 4
 
