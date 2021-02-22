@@ -66,7 +66,7 @@ uint16_t givelink_get_length();
 bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
 
 bool givelink_context_authed();
-void givelink_set_auth(bool authed);
+void givelink_context_set_auth(bool authed);
 void givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header);
 void givelink_context_set_key(const uint8_t * key, const uint16_t key_len);
 void givelink_context_set_token(const uint8_t * token, const uint16_t token_len);

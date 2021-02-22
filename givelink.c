@@ -9,7 +9,7 @@ bool givelink_context_authed() {
     return context->authed;
 }
 
-void givelink_set_auth(bool authed) {
+void givelink_context_set_auth(bool authed) {
     context->authed = authed;
     if (authed) {
         context->header_length = context->authed_header_length;
@@ -57,7 +57,7 @@ void givelink_context_set_token(const uint8_t * token, const uint16_t token_len)
     memcpy(context->buffer+context->unauth_header_start+context->unauth_header_length, token, token_len);
     context->unauth_header_length += token_len;
 
-    givelink_set_auth(false);
+    givelink_context_set_auth(false);
 }
 
 void givelink_context_set_addr(const uint8_t * addr, const uint16_t addr_len) {
@@ -152,11 +152,11 @@ bool givelink_from_binary(const uint8_t * payload,
 
     if (gl_obj -> type == AUTHRES) {
         givelink_context_set_addr(gl_obj->data, gl_obj->length - TYPE_LENGTH);
-        givelink_set_auth(true);
+        givelink_context_set_auth(true);
     }
 
     if (gl_obj -> type == ERROR) {
-        givelink_set_auth(false);
+        givelink_context_set_auth(false);
     }
 
     return true;
