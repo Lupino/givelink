@@ -381,7 +381,7 @@ void loop() {
         #endif
     }
 
-    if (!givelink_authed()) {
+    if (!givelink_context_authed()) {
         if (auth_timer + auth_delay < get_current_time()) {
             givelink_reset();
             givelink_set_id(id);

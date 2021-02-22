@@ -5,7 +5,7 @@
 givelink_context_t * context;
 givelink_t * gl_obj;
 
-bool givelink_authed() {
+bool givelink_context_authed() {
     return context->authed;
 }
 
