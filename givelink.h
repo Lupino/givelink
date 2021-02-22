@@ -70,6 +70,7 @@ void givelink_context_set_auth(bool authed);
 void givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header);
 void givelink_context_set_key(const uint8_t * key, const uint16_t key_len);
 void givelink_context_set_token(const uint8_t * token, const uint16_t token_len);
+void givelink_context_set_addr(const uint8_t * addr, const uint16_t addr_len);
 
 #ifdef __cplusplus
 }
