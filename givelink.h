@@ -21,6 +21,7 @@ extern "C" {
 #define TRNS      10
 #define CTRLREQ   11
 #define CTRLRES   12
+#define CTRLREQ1  13
 
 #define MAGIC_LENGTH 4
 
