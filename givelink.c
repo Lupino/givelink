@@ -155,10 +155,6 @@ bool givelink_from_binary(const uint8_t * payload,
         givelink_context_set_auth(true);
     }
 
-    if (gl_obj -> type == ERROR) {
-        givelink_context_set_auth(false);
-    }
-
     return true;
 }
 
