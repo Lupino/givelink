@@ -6,30 +6,48 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-givelink_t	KEYWORD1
+givelink_t	       KEYWORD1
+givelink_context_t KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-givelink_new KEYWORD2
-givelink_reset KEYWORD2
-givelink_set_id KEYWORD2
-givelink_set_type KEYWORD2
-givelink_set_data KEYWORD2
-
-givelink_to_binary KEYWORD2
-givelink_from_binary KEYWORD2
-
-givelink_get_length KEYWORD2
-
-givelink_free KEYWORD2
-givelink_recv KEYWORD2
-
-#######################################
-# Instances (KEYWORD2)
-#######################################
-
+givelink_init              KEYWORD2
+givelink_reset             KEYWORD2
+givelink_set_id            KEYWORD2
+givelink_set_type          KEYWORD2
+givelink_set_data          KEYWORD2
+givelink_set_data_length   KEYWORD2
+givelink_to_binary         KEYWORD2
+givelink_from_binary       KEYWORD2
+givelink_get_length        KEYWORD2
+givelink_recv              KEYWORD2
+givelink_context_authed    KEYWORD2
+givelink_context_set_auth  KEYWORD2
+givelink_context_init      KEYWORD2
+givelink_context_set_key   KEYWORD2
+givelink_context_set_token KEYWORD2
+givelink_context_set_addr  KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
+REQUEST   LITERAL1
+RESPONSE  LITERAL1
+ATTRIBUTE LITERAL1
+TELEMETRY LITERAL1
+PING      LITERAL1
+SUCCESS   LITERAL1
+ERROR     LITERAL1
+AUTHREQ   LITERAL1
+AUTHRES   LITERAL1
+TRNS      LITERAL1
+CTRLREQ   LITERAL1
+CTRLRES   LITERAL1
+CTRLREQ1  LITERAL1
+DROP      LITERAL1
+
+MAGIC_LENGTH       LITERAL1
+TYPE_LENGTH        LITERAL1
+MINI_PACKET_LENGTH LITERAL1
+GLP0               LITERAL1
