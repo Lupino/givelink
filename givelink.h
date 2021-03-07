@@ -22,6 +22,7 @@ extern "C" {
 #define CTRLREQ   11
 #define CTRLRES   12
 #define CTRLREQ1  13
+#define DROP      14
 
 #define MAGIC_LENGTH 4
 
