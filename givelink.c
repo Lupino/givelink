@@ -166,7 +166,7 @@ uint16_t givelink_get_length() {
     return gl_obj -> length + context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH;
 }
 
-uint16_t givelink_get_data_length(const uint8_t * payload,
+uint16_t givelink_get_data_length0(const uint8_t * payload,
         const uint16_t length) {
     if (length < context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH) {
         return 0;
@@ -174,6 +174,10 @@ uint16_t givelink_get_data_length(const uint8_t * payload,
     uint8_t lenh = payload[context->header_length + 2];
     uint8_t lenl = payload[context->header_length + 3];
     return to_uint16(lenh, lenl);
+}
+
+uint16_t givelink_get_data_length() {
+    return gl_obj->length - TYPE_LENGTH;
 }
 
 void givelink_init(givelink_t * m, uint8_t *data) {
@@ -267,7 +271,7 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c) {
                 headLen = 0;
             }
         } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1) {
-            uint16_t dataLen = givelink_get_data_length(payload, headLen);
+            uint16_t dataLen = givelink_get_data_length0(payload, headLen);
             if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1 + dataLen) {
                 if (givelink_check_crc16(payload, headLen)) {
                     recved = true;

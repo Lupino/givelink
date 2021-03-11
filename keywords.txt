@@ -18,6 +18,7 @@ givelink_set_id            KEYWORD2
 givelink_set_type          KEYWORD2
 givelink_set_data          KEYWORD2
 givelink_set_data_length   KEYWORD2
+givelink_get_data_length   KEYWORD2
 givelink_to_binary         KEYWORD2
 givelink_from_binary       KEYWORD2
 givelink_get_length        KEYWORD2
