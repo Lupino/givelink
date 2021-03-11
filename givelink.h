@@ -77,6 +77,8 @@ void givelink_context_set_key(const uint8_t * key, const uint16_t key_len);
 void givelink_context_set_token(const uint8_t * token, const uint16_t token_len);
 void givelink_context_set_addr(const uint8_t * addr, const uint16_t addr_len);
 
+uint16_t givelink_crc16( const uint8_t *input_str, size_t num_bytes );
+
 #ifdef __cplusplus
 }
 #endif

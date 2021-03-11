@@ -29,6 +29,7 @@ givelink_context_init      KEYWORD2
 givelink_context_set_key   KEYWORD2
 givelink_context_set_token KEYWORD2
 givelink_context_set_addr  KEYWORD2
+givelink_crc16  KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
