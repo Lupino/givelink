@@ -68,7 +68,7 @@ bool givelink_from_binary(const uint8_t * payload, const uint16_t length);
 
 uint16_t givelink_get_length();
 
-bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c);
+bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bool *crc);
 
 bool givelink_context_authed();
 void givelink_context_set_auth(bool authed);
