@@ -88,6 +88,7 @@ uint16_t id = 0;
 uint16_t headLen = 0;
 uint8_t payload[MAX_PAYLOAD_LENGTH + 1];
 uint8_t payloadSend[MAX_PAYLOAD_LENGTH + 1];
+bool crcFlag = false;
 
 #define HEX_KEY "bdde6db9f3daf38f3a"
 #define HEX_TOKEN "14b61d617a9c428a95542dbd097d7a0e"
@@ -259,7 +260,7 @@ void loop() {
 
     while (GL_SERIAL.available() > 0) {
         outByte = GL_SERIAL.read();
-        if (givelink_recv(payload, &headLen, outByte)) {
+        if (givelink_recv(payload, &headLen, outByte, &crcFlag)) {
             if (givelink_from_binary(payload, headLen)) {
                 #if DEBUG
                 Serial.print(F("Recv Id: "));
