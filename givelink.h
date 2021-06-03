@@ -5,36 +5,7 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-#define REQUEST    1
-#define RESPONSE   2
-#define ATTRIBUTE  3
-#define TELEMETRY  4
-#define PING       5
-#define SUCCESS    6
-#define ERROR      7
-#define AUTHREQ    8
-#define AUTHRES    9
-#define TRNS       10
-#define CTRLREQ    11
-#define CTRLRES    12
-#define CTRLREQ1   13
-#define DROP       14
-#define SWITCH     15
-#define SWITCHBEAT 16
-#define SYNCTIME   17
-
-#define MAGIC_LENGTH 4
-
-#define TYPE_LENGTH 1
-
-#define MINI_PACKET_LENGTH 2 + 2 + 2 + TYPE_LENGTH
-
-// givelink packet magic
-#define GLP0 "GLP0"
+#include "givelink_common.h"
 
 typedef struct {
     uint16_t id;
@@ -79,8 +50,6 @@ void givelink_context_init(givelink_context_t * ctx, uint8_t * unauth_header);
 void givelink_context_set_key(const uint8_t * key, const uint16_t key_len);
 void givelink_context_set_token(const uint8_t * token, const uint16_t token_len);
 void givelink_context_set_addr(const uint8_t * addr, const uint16_t addr_len);
-
-uint16_t givelink_crc16( const uint8_t *input_str, size_t num_bytes );
 
 #ifdef __cplusplus
 }
