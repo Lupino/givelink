@@ -204,19 +204,6 @@ void givelink_set_data_length(const uint16_t length) {
     gl_obj->length = PACKET_TYPE_LENGTH + length;
 }
 
-bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
-    if (length < PACKET_MAGIC_LENGTH) {
-        return false;
-    }
-    if (payload[0] == 'G'
-            && payload[1] == 'L'
-            && payload[2] == 'P'
-            && payload[3] == '0') {
-        return true;
-    }
-    return false;
-}
-
 bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
     uint8_t crch = payload[context->header_length + 4];
     uint8_t crcl = payload[context->header_length + 5];
@@ -241,12 +228,6 @@ bool givelink_check_packet_header(const uint8_t * payload) {
         }
     }
     return true;
-}
-
-void shift_data(uint8_t * payload, uint16_t length) {
-    for (uint16_t i = 0; i < length - 1; i ++) {
-        payload[i] = payload[i + 1];
-    }
 }
 
 bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c, bool *crc) {

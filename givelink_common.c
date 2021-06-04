@@ -120,3 +120,22 @@ void givelink_fromuint16(uint16_t src, uint8_t *h, uint8_t *l) {
     *h = (uint8_t)(src >> 8);
     *l = (uint8_t)src;
 }
+
+bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
+    if (length < PACKET_MAGIC_LENGTH) {
+        return false;
+    }
+    if (payload[0] == 'G'
+            && payload[1] == 'L'
+            && payload[2] == 'P'
+            && payload[3] == '0') {
+        return true;
+    }
+    return false;
+}
+
+void givelink_shift_data(uint8_t * payload, uint16_t length) {
+    for (uint16_t i = 0; i < length - 1; i ++) {
+        payload[i] = payload[i + 1];
+    }
+}
