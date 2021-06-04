@@ -19,14 +19,14 @@ void givelink_context_set_auth(bool authed) {
 
 void givelink_context_set_unauth_magic() {
     context->unauth_header_start = 0;
-    context->unauth_header_length = MAGIC_LENGTH;
-    memcpy(context->buffer, (uint8_t *)GLP0, MAGIC_LENGTH);
+    context->unauth_header_length = PACKET_MAGIC_LENGTH;
+    memcpy(context->buffer, (uint8_t *)GLP0, PACKET_MAGIC_LENGTH);
 }
 
 void givelink_context_set_authed_magic() {
     context->authed_header_start = context->unauth_header_start+context->unauth_header_length;
-    context->authed_header_length = MAGIC_LENGTH;
-    memcpy(context->buffer+context->authed_header_start, (uint8_t *)GLP0, MAGIC_LENGTH);
+    context->authed_header_length = PACKET_MAGIC_LENGTH;
+    memcpy(context->buffer+context->authed_header_start, (uint8_t *)GLP0, PACKET_MAGIC_LENGTH);
 }
 
 void givelink_context_init(givelink_context_t * ctx, uint8_t * buffer) {
@@ -89,7 +89,7 @@ void givelink_to_binary_raw(uint8_t * payload) {
         memcpy(payload, context->buffer+context->unauth_header_start, context->unauth_header_length);
     }
     memcpy(payload+context->header_length, (const uint8_t *)gl_obj, MINI_PACKET_LENGTH);
-    memcpy(payload+context->header_length+MINI_PACKET_LENGTH, gl_obj->data, gl_obj->length - TYPE_LENGTH);
+    memcpy(payload+context->header_length+MINI_PACKET_LENGTH, gl_obj->data, gl_obj->length - PACKET_TYPE_LENGTH);
     swap_edition(payload);
 }
 
@@ -133,15 +133,15 @@ bool givelink_from_binary(const uint8_t * payload,
 
     gl_obj -> type = payload[context->header_length + 6];
 
-    if (gl_obj -> length > TYPE_LENGTH) {
+    if (gl_obj -> length > PACKET_TYPE_LENGTH) {
         memcpy(gl_obj->data, payload + context->header_length + MINI_PACKET_LENGTH,
                 length - context->header_length - MINI_PACKET_LENGTH);
     }
 
-    gl_obj -> data[gl_obj -> length - TYPE_LENGTH] = '\0';
+    gl_obj -> data[gl_obj -> length - PACKET_TYPE_LENGTH] = '\0';
 
     if (gl_obj -> type == AUTHRES) {
-        givelink_context_set_addr(gl_obj->data, gl_obj->length - TYPE_LENGTH);
+        givelink_context_set_addr(gl_obj->data, gl_obj->length - PACKET_TYPE_LENGTH);
         givelink_context_set_auth(true);
     }
 
@@ -153,12 +153,12 @@ bool givelink_from_binary(const uint8_t * payload,
 }
 
 uint16_t givelink_get_length() {
-    return gl_obj -> length + context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH;
+    return gl_obj -> length + context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH;
 }
 
 uint16_t givelink_get_data_length0(const uint8_t * payload,
         const uint16_t length) {
-    if (length < context->header_length + MINI_PACKET_LENGTH - TYPE_LENGTH) {
+    if (length < context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH) {
         return 0;
     }
     uint8_t lenh = payload[context->header_length + 2];
@@ -167,13 +167,13 @@ uint16_t givelink_get_data_length0(const uint8_t * payload,
 }
 
 uint16_t givelink_get_data_length() {
-    return gl_obj->length - TYPE_LENGTH;
+    return gl_obj->length - PACKET_TYPE_LENGTH;
 }
 
 void givelink_init(givelink_t * m, uint8_t *data) {
     gl_obj = m;
     gl_obj->id = 0;
-    gl_obj->length = TYPE_LENGTH;
+    gl_obj->length = PACKET_TYPE_LENGTH;
     gl_obj->crc16 = 0;
     gl_obj->type = PING;
     gl_obj->data = data;
@@ -181,7 +181,7 @@ void givelink_init(givelink_t * m, uint8_t *data) {
 
 void givelink_reset() {
     gl_obj -> id = 0;
-    gl_obj -> length = TYPE_LENGTH;
+    gl_obj -> length = PACKET_TYPE_LENGTH;
     gl_obj -> crc16 = 0;
     gl_obj -> type = PING;
     gl_obj -> data[0] = '\0';
@@ -201,11 +201,11 @@ void givelink_set_data(const uint8_t * data, const uint16_t length) {
 }
 
 void givelink_set_data_length(const uint16_t length) {
-    gl_obj->length = TYPE_LENGTH + length;
+    gl_obj->length = PACKET_TYPE_LENGTH + length;
 }
 
 bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
-    if (length < MAGIC_LENGTH) {
+    if (length < PACKET_MAGIC_LENGTH) {
         return false;
     }
     if (payload[0] == 'G'
@@ -268,8 +268,8 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c, bool *crc) {
             }
         }
     } else {
-        if (headLen >= MAGIC_LENGTH) {
-            shift_data(payload, headLen);
+        if (headLen >= PACKET_MAGIC_LENGTH) {
+            givelink_shift_data(payload, headLen);
             headLen -= 1;
         }
     }

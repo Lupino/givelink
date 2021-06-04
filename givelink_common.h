@@ -27,11 +27,12 @@ extern "C" {
 #define SWITCHBEAT 16
 #define SYNCTIME   17
 
-#define MAGIC_LENGTH 4
-
-#define TYPE_LENGTH 1
-
-#define MINI_PACKET_LENGTH 2 + 2 + 2 + TYPE_LENGTH
+#define PACKET_MAGIC_LENGTH 4
+#define PACKET_TYPE_LENGTH 1
+#define PACKET_ID_LENGTH 2
+#define PACKET_CRC_LENGTH 2
+#define PACKET_LENGTH_LENGTH 2
+#define PACKET_ADDR_LENGTH 4
 
 // givelink packet magic
 #define GLP0 "GLP0"

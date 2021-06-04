@@ -7,6 +7,8 @@ extern "C" {
 
 #include "givelink_common.h"
 
+#define MINI_PACKET_LENGTH PACKET_ID_LENGTH + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH + PACKET_TYPE_LENGTH
+
 typedef struct {
     uint16_t id;
     uint16_t length;
