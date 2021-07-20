@@ -23,6 +23,7 @@ uint8_t  givelink_raw_get_type(  const uint8_t * payload);
 void     givelink_raw_get_data(  const uint8_t * payload, uint8_t * data, uint16_t *dataLen);
 uint16_t givelink_raw_get_id(    const uint8_t * payload);
 void     givelink_raw_get_key(   const uint8_t * payload, uint8_t * key, uint16_t * key_len);
+void     givelink_raw_set_magic(       uint8_t * payload);
 
 #ifdef __cplusplus
 }
