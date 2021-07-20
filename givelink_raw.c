@@ -75,7 +75,9 @@ void givelink_raw_set_token(uint8_t * payload, const uint8_t * token, const uint
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen];
     payload[headerLen] = (const uint8_t)token_len;
-    memcpy(payload + headerLen + 1, token, token_len);
+    if (token_len > 0) {
+        memcpy(payload + headerLen + 1, token, token_len);
+    }
 }
 
 void givelink_raw_set_id(uint8_t * payload, const uint16_t id) {
