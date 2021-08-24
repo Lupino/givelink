@@ -8,7 +8,7 @@ bool givelink_context_authed() {
     return context->authed;
 }
 
-void givelink_context_set_auth(bool authed) {
+void givelink_context_set_auth(const bool authed) {
     context->authed = authed;
     if (authed) {
         context->header_length = context->authed_header_length;
@@ -204,7 +204,7 @@ void givelink_set_data_length(const uint16_t length) {
     gl_obj->length = PACKET_TYPE_LENGTH + length;
 }
 
-bool givelink_check_crc16(uint8_t * payload, uint16_t length) {
+bool givelink_check_crc16(uint8_t * payload, const uint16_t length) {
     uint8_t crch = payload[context->header_length + 4];
     uint8_t crcl = payload[context->header_length + 5];
     uint16_t crc0 = givelink_touint16(crch, crcl);
@@ -230,7 +230,7 @@ bool givelink_check_packet_header(const uint8_t * payload) {
     return true;
 }
 
-bool givelink_recv(uint8_t * payload, uint16_t * length, uint8_t c, bool *crc) {
+bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bool *crc) {
     uint16_t headLen = *length;
     bool recved = false;
     payload[headLen] = c;

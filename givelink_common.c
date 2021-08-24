@@ -89,7 +89,7 @@ const uint16_t crc_tab16[256] PROGMEM = {
  * limited by the constant SIZE_MAX.
  */
 
-uint16_t givelink_crc16( const uint8_t *input_str, size_t num_bytes ) {
+uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes ) {
 
   uint16_t crc;
   const uint8_t *ptr;
@@ -116,7 +116,7 @@ uint16_t givelink_touint16(const uint8_t h, const uint8_t l) {
     return ((h << 8) & 0xff00) + (l & 0xff);
 }
 
-void givelink_fromuint16(uint16_t src, uint8_t *h, uint8_t *l) {
+void givelink_fromuint16(const uint16_t src, uint8_t *h, uint8_t *l) {
     *h = (uint8_t)(src >> 8);
     *l = (uint8_t)src;
 }
@@ -134,7 +134,7 @@ bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     return false;
 }
 
-void givelink_shift_data(uint8_t * payload, uint16_t length) {
+void givelink_shift_data(uint8_t * payload, const uint16_t length) {
     for (uint16_t i = 0; i < length - 1; i ++) {
         payload[i] = payload[i + 1];
     }

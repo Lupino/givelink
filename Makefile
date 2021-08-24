@@ -1,4 +1,4 @@
-SRC=crc16.c \
+SRC=givelink_common \
 	givelink.c \
 	test/main.c
 
