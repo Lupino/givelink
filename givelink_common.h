@@ -34,10 +34,12 @@ extern "C" {
 #define PACKET_LENGTH_LENGTH 2
 #define PACKET_ADDR_LENGTH 4
 
+#define INIT_CRC 0x0000
+
 // givelink packet magic
 #define GLP0 "GLP0"
 
-uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes);
+uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes, const uint16_t init_crc);
 
 uint16_t givelink_touint16(const uint8_t h, const uint8_t l);
 void givelink_fromuint16(const uint16_t src, uint8_t *h, uint8_t *l);

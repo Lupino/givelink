@@ -33,7 +33,7 @@ bool givelink_raw_check_crc16(uint8_t * payload, const uint16_t length, const ui
     payload[pos] = 0x00;
     payload[pos+1] = 0x00;
 
-    const uint16_t crc = givelink_crc16(payload, length);
+    const uint16_t crc = givelink_crc16(payload, length, INIT_CRC);
 
     payload[pos] = crch;
     payload[pos+1] = crcl;
@@ -140,7 +140,7 @@ void givelink_raw_set_crc16(uint8_t * payload) {
     payload[pos]     = 0;
     payload[pos + 1] = 0;
 
-    const uint16_t crc = givelink_crc16(payload, size);
+    const uint16_t crc = givelink_crc16(payload, size, INIT_CRC);
 
     uint8_t h;
     uint8_t l;

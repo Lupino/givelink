@@ -81,7 +81,7 @@ const uint16_t crc_tab16[256] PROGMEM = {
 };
 
 /*
- * uint16_t givelink_crc16( const uint8_t *input_str, size_t num_bytes );
+ * uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes, const uint16_t init_crc);
  *
  * The function givelink_crc16() calculates the 16 bits CRC16 in one pass for a byte
  * string of which the beginning has been passed to the function. The number of
@@ -89,13 +89,13 @@ const uint16_t crc_tab16[256] PROGMEM = {
  * limited by the constant SIZE_MAX.
  */
 
-uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes ) {
+uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes, const uint16_t init_crc) {
 
   uint16_t crc;
   const uint8_t *ptr;
   size_t a;
 
-  crc = 0x0000;
+  crc = init_crc;
   ptr = input_str;
 
   if ( ptr != NULL ) for (a=0; a<num_bytes; a++) {

@@ -99,7 +99,7 @@ void givelink_to_binary(uint8_t * payload) {
     payload[context->header_length + 4] = 0;
     payload[context->header_length + 5] = 0;
 
-    uint16_t crc = givelink_crc16(payload, givelink_get_length());
+    uint16_t crc = givelink_crc16(payload, givelink_get_length(), INIT_CRC);
 
     uint8_t crch;
     uint8_t crcl;
@@ -212,7 +212,7 @@ bool givelink_check_crc16(uint8_t * payload, const uint16_t length) {
     payload[context->header_length + 4] = 0x00;
     payload[context->header_length + 5] = 0x00;
 
-    uint16_t crc = givelink_crc16(payload, length);
+    uint16_t crc = givelink_crc16(payload, length, INIT_CRC);
 
     payload[context->header_length + 4] = crch;
     payload[context->header_length + 5] = crcl;
