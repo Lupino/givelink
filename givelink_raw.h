@@ -9,7 +9,7 @@ extern "C" {
 
 #define MINI_PACKET_LENGTH PACKET_MAGIC_LENGTH + 1 + PACKET_ADDR_LENGTH + 1 + PACKET_ID_LENGTH + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH + PACKET_TYPE_LENGTH
 
-bool     givelink_raw_recv(            uint8_t * payload, uint16_t * length, const uint8_t c, bool *crc);
+bool     givelink_raw_recv(            uint8_t * payload, uint16_t * length, const uint8_t c);
 
 void     givelink_raw_set_key(         uint8_t * payload, const uint8_t * key, const uint16_t key_len);
 void     givelink_raw_set_token(       uint8_t * payload, const uint8_t * token, const uint16_t token_len);

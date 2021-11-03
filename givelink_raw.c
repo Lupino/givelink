@@ -41,7 +41,7 @@ bool givelink_raw_check_crc16(uint8_t * payload, const uint16_t length, const ui
     return crc == crc0;
 }
 
-bool givelink_raw_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bool *crc) {
+bool givelink_raw_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
     uint16_t size = *length;
     bool recved = false;
     payload[size] = c;
@@ -51,8 +51,11 @@ bool givelink_raw_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bo
         if (headerLen > 0) {
             uint16_t dataLen = givelink_raw_get_data_length0(payload, headerLen);
             if (size >= headerLen + dataLen) {
-                *crc = givelink_raw_check_crc16(payload, size, headerLen);
-                recved = true;
+                if (givelink_raw_check_crc16(payload, size, headerLen)) {
+                    recved = true;
+                } else {
+                    headerLen = 0;
+                }
             }
         }
     } else {

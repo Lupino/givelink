@@ -230,7 +230,7 @@ bool givelink_check_packet_header(const uint8_t * payload) {
     return true;
 }
 
-bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bool *crc) {
+bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
     uint16_t headLen = *length;
     bool recved = false;
     payload[headLen] = c;
@@ -244,8 +244,11 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c, bool *
         } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1) {
             uint16_t dataLen = givelink_get_data_length0(payload, headLen);
             if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1 + dataLen) {
-                *crc = givelink_check_crc16(payload, headLen);
-                recved = true;
+                if (givelink_check_crc16(payload, headLen)) {
+                    recved = true;
+                } else {
+                    headLen = 0;
+                }
             }
         }
     } else {
