@@ -7,7 +7,7 @@ extern "C" {
 
 #include "givelink_common.h"
 
-#define MINI_PACKET_LENGTH PACKET_MAGIC_LENGTH + 1 + PACKET_ADDR_LENGTH + 1 + PACKET_ID_LENGTH + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH + PACKET_TYPE_LENGTH
+#define MINI_RAW_PACKET_LENGTH PACKET_MAGIC_LENGTH + 1 + PACKET_ADDR_LENGTH + 1 + PACKET_ID_LENGTH + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH + PACKET_TYPE_LENGTH
 
 bool     givelink_raw_recv(            uint8_t * payload, uint16_t * length, const uint8_t c);
 

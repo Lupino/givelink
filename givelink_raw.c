@@ -2,7 +2,7 @@
 #include <string.h>
 
 uint16_t givelink_raw_get_header_length(const uint8_t * payload, const uint16_t size) {
-    if (size < MINI_PACKET_LENGTH) {
+    if (size < MINI_RAW_PACKET_LENGTH) {
         return 0;
     }
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
