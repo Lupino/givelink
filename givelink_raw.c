@@ -54,15 +54,12 @@ bool givelink_raw_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
                 if (givelink_raw_check_crc16(payload, size, headerLen)) {
                     recved = true;
                 } else {
-                    headerLen = 0;
+                    givelink_shift_data(payload, &size);
                 }
             }
         }
     } else {
-        if (size >= PACKET_MAGIC_LENGTH) {
-            givelink_shift_data(payload, size);
-            size -= 1;
-        }
+        givelink_shift_data(payload, &size);
     }
 
     *length = size;

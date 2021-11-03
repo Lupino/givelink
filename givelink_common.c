@@ -134,8 +134,20 @@ bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     return false;
 }
 
-void givelink_shift_data(uint8_t * payload, const uint16_t length) {
+void givelink_shift_data_raw(uint8_t * payload, const uint16_t length) {
     for (uint16_t i = 0; i < length - 1; i ++) {
         payload[i] = payload[i + 1];
     }
+}
+
+void givelink_shift_data(uint8_t * payload, uint16_t * length) {
+    uint16_t headLen = *length;
+    while (headLen >= PACKET_MAGIC_LENGTH) {
+        givelink_shift_data_raw(payload, headLen);
+        headLen -= 1;
+        if (givelink_discover_magic(payload, headLen)) {
+            break;
+        }
+    }
+    *length = headLen;
 }

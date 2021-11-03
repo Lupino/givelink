@@ -239,7 +239,7 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
         if (headLen == context->header_length) {
             if (!givelink_check_packet_header(payload)) {
                 // wrong packet, ignore
-                headLen = 0;
+                givelink_shift_data(payload, &headLen);
             }
         } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1) {
             uint16_t dataLen = givelink_get_data_length0(payload, headLen);
@@ -247,15 +247,12 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
                 if (givelink_check_crc16(payload, headLen)) {
                     recved = true;
                 } else {
-                    headLen = 0;
+                    givelink_shift_data(payload, &headLen);
                 }
             }
         }
     } else {
-        if (headLen >= PACKET_MAGIC_LENGTH) {
-            givelink_shift_data(payload, headLen);
-            headLen -= 1;
-        }
+        givelink_shift_data(payload, &headLen);
     }
 
     *length = headLen;
