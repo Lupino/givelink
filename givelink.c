@@ -156,13 +156,13 @@ uint16_t givelink_get_length() {
     return gl_obj -> length + context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH;
 }
 
-uint16_t givelink_get_data_length0(const uint8_t * payload,
+uint16_t givelink_get_data_length0(const uint16_t header_length, const uint8_t * payload,
         const uint16_t length) {
-    if (length < context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH) {
+    if (length < header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH) {
         return 0;
     }
-    uint8_t lenh = payload[context->header_length + 2];
-    uint8_t lenl = payload[context->header_length + 3];
+    uint8_t lenh = payload[header_length + 2];
+    uint8_t lenl = payload[header_length + 3];
     return givelink_touint16(lenh, lenl);
 }
 
@@ -204,18 +204,18 @@ void givelink_set_data_length(const uint16_t length) {
     gl_obj->length = PACKET_TYPE_LENGTH + length;
 }
 
-bool givelink_check_crc16(uint8_t * payload, const uint16_t length) {
-    uint8_t crch = payload[context->header_length + 4];
-    uint8_t crcl = payload[context->header_length + 5];
+bool givelink_check_crc16(const uint16_t header_length, uint8_t * payload, const uint16_t length) {
+    uint8_t crch = payload[header_length + 4];
+    uint8_t crcl = payload[header_length + 5];
     uint16_t crc0 = givelink_touint16(crch, crcl);
 
-    payload[context->header_length + 4] = 0x00;
-    payload[context->header_length + 5] = 0x00;
+    payload[header_length + 4] = 0x00;
+    payload[header_length + 5] = 0x00;
 
     uint16_t crc = givelink_crc16(payload, length, INIT_CRC);
 
-    payload[context->header_length + 4] = crch;
-    payload[context->header_length + 5] = crcl;
+    payload[header_length + 4] = crch;
+    payload[header_length + 5] = crcl;
 
     return crc == crc0;
 }
@@ -236,19 +236,30 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
     payload[headLen] = c;
     headLen = headLen + 1;
     if (givelink_discover_magic(payload, headLen)) {
-        if (headLen == context->header_length) {
-            if (!givelink_check_packet_header(payload)) {
-                // wrong packet, ignore
-                givelink_shift_data(payload, &headLen);
+        if (givelink_is_broadcast(payload, headLen)) {
+            if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - 1) {
+                uint16_t dataLen = givelink_get_data_length0(PACKET_BROADCAST_HEAD_LENGTH, payload, headLen);
+                if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
+                    if (givelink_check_crc16(PACKET_BROADCAST_HEAD_LENGTH, payload, headLen)) {
+                        recved = true;
+                    } else {
+                        givelink_shift_data(payload, &headLen);
+                    }
+                }
             }
         } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1) {
-            uint16_t dataLen = givelink_get_data_length0(payload, headLen);
+            uint16_t dataLen = givelink_get_data_length0(context->header_length, payload, headLen);
             if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1 + dataLen) {
-                if (givelink_check_crc16(payload, headLen)) {
+                if (givelink_check_crc16(context->header_length, payload, headLen)) {
                     recved = true;
                 } else {
                     givelink_shift_data(payload, &headLen);
                 }
+            }
+        } else if (headLen == context->header_length) {
+            if (!givelink_check_packet_header(payload)) {
+                // wrong packet, ignore
+                givelink_shift_data(payload, &headLen);
             }
         }
     } else {

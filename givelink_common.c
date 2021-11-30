@@ -134,6 +134,21 @@ bool givelink_discover_magic(const uint8_t * payload, const uint16_t length) {
     return false;
 }
 
+bool givelink_is_broadcast(const uint8_t * payload, const uint16_t length) {
+    if (length < PACKET_BROADCAST_HEAD_LENGTH) {
+        return false;
+    }
+    if (payload[0] == 'G'
+            && payload[1] == 'L'
+            && payload[2] == 'P'
+            && payload[3] == '0'
+            && payload[4] == 0x00
+            && payload[5] == 0x00) {
+        return true;
+    }
+    return false;
+}
+
 void givelink_shift_data_raw(uint8_t * payload, const uint16_t length) {
     for (uint16_t i = 0; i < length - 1; i ++) {
         payload[i] = payload[i + 1];

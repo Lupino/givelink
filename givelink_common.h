@@ -34,6 +34,8 @@ extern "C" {
 #define PACKET_LENGTH_LENGTH 2
 #define PACKET_ADDR_LENGTH 4
 
+#define PACKET_BROADCAST_HEAD_LENGTH PACKET_MAGIC_LENGTH + 2
+
 #define INIT_CRC 0x0000
 
 // givelink packet magic
@@ -46,6 +48,8 @@ void givelink_fromuint16(const uint16_t src, uint8_t *h, uint8_t *l);
 bool givelink_discover_magic(const uint8_t * payload, const uint16_t length);
 void givelink_shift_data_raw(uint8_t * payload, const uint16_t length);
 void givelink_shift_data(uint8_t * payload, uint16_t * length);
+
+bool givelink_is_broadcast(const uint8_t * payload, const uint16_t length);
 
 #ifdef __cplusplus
 }
