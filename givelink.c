@@ -237,9 +237,9 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
     headLen = headLen + 1;
     if (givelink_discover_magic(payload, headLen)) {
         if (givelink_is_broadcast(payload, headLen)) {
-            if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - 1) {
+            if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH) {
                 uint16_t dataLen = givelink_get_data_length0(PACKET_BROADCAST_HEAD_LENGTH, payload, headLen);
-                if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - 1 + dataLen) {
+                if (headLen >= PACKET_BROADCAST_HEAD_LENGTH + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH + dataLen) {
                     if (givelink_check_crc16(PACKET_BROADCAST_HEAD_LENGTH, payload, headLen)) {
                         recved = true;
                     } else {
@@ -247,9 +247,9 @@ bool givelink_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
                     }
                 }
             }
-        } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1) {
+        } else if (headLen >= context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH) {
             uint16_t dataLen = givelink_get_data_length0(context->header_length, payload, headLen);
-            if (headLen >= context->header_length + MINI_PACKET_LENGTH - 1 + dataLen) {
+            if (headLen >= context->header_length + MINI_PACKET_LENGTH - PACKET_TYPE_LENGTH + dataLen) {
                 if (givelink_check_crc16(context->header_length, payload, headLen)) {
                     recved = true;
                 } else {
