@@ -112,30 +112,35 @@ void givelink_to_binary(uint8_t * payload) {
 
 bool givelink_from_binary(const uint8_t * payload,
         const uint16_t length) {
-    if (length < context->header_length + MINI_PACKET_LENGTH) {
+    uint16_t header_length = context->header_length;
+    if (givelink_is_broadcast(payload, headLen)) {
+        header_length = PACKET_BROADCAST_HEAD_LENGTH;
+    }
+
+    if (length < header_length + MINI_PACKET_LENGTH) {
         return false;
     }
 
-    uint8_t idh = payload[context->header_length];
-    uint8_t idl = payload[context->header_length + 1];
+    uint8_t idh = payload[header_length];
+    uint8_t idl = payload[header_length + 1];
 
     gl_obj -> id = givelink_touint16(idh, idl);
 
-    uint8_t lenh = payload[context->header_length + 2];
-    uint8_t lenl = payload[context->header_length + 3];
+    uint8_t lenh = payload[header_length + 2];
+    uint8_t lenl = payload[header_length + 3];
 
     gl_obj -> length = givelink_touint16(lenh, lenl);
 
-    uint8_t crch = payload[context->header_length + 4];
-    uint8_t crcl = payload[context->header_length + 5];
+    uint8_t crch = payload[header_length + 4];
+    uint8_t crcl = payload[header_length + 5];
 
     gl_obj -> crc16 = givelink_touint16(crch, crcl);
 
-    gl_obj -> type = payload[context->header_length + 6];
+    gl_obj -> type = payload[header_length + 6];
 
     if (gl_obj -> length > PACKET_TYPE_LENGTH) {
-        memcpy(gl_obj->data, payload + context->header_length + MINI_PACKET_LENGTH,
-                length - context->header_length - MINI_PACKET_LENGTH);
+        memcpy(gl_obj->data, payload + header_length + MINI_PACKET_LENGTH,
+                length - header_length - MINI_PACKET_LENGTH);
     }
 
     gl_obj -> data[gl_obj -> length - PACKET_TYPE_LENGTH] = '\0';
