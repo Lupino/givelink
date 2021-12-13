@@ -9,23 +9,24 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define REQUEST    1
-#define RESPONSE   2
-#define ATTRIBUTE  3
-#define TELEMETRY  4
-#define PING       5
-#define SUCCESS    6
-#define ERROR      7
-#define AUTHREQ    8
-#define AUTHRES    9
-#define TRNS       10
-#define CTRLREQ    11
-#define CTRLRES    12
-#define CTRLREQ1   13
-#define DROP       14
-#define SWITCH     15
-#define SWITCHBEAT 16
-#define SYNCTIME   17
+#define REQUEST     1
+#define RESPONSE    2
+#define ATTRIBUTE   3
+#define TELEMETRY   4
+#define PING        5
+#define SUCCESS     6
+#define ERROR       7
+#define AUTHREQ     8
+#define AUTHRES     9
+#define TRNS        10
+#define CTRLREQ     11
+#define CTRLRES     12
+#define CTRLREQ1    13
+#define DROP        14
+#define SWITCH      15
+#define SWITCHBEAT  16
+#define SYNCTIME    17
+#define GETSETTOKEN 18
 
 #define PACKET_MAGIC_LENGTH 4
 #define PACKET_TYPE_LENGTH 1
