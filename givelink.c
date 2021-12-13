@@ -113,7 +113,7 @@ void givelink_to_binary(uint8_t * payload) {
 bool givelink_from_binary(const uint8_t * payload,
         const uint16_t length) {
     uint16_t header_length = context->header_length;
-    if (givelink_is_broadcast(payload, headLen)) {
+    if (givelink_is_broadcast(payload, length)) {
         header_length = PACKET_BROADCAST_HEAD_LENGTH;
     }
 
