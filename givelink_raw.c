@@ -188,6 +188,14 @@ void givelink_raw_get_key(const uint8_t * payload, uint8_t * key, uint16_t * key
     memcpy(key, payload + headerLen + 1, *key_len);
 }
 
+
+void givelink_raw_get_token(const uint8_t * payload, uint8_t * token, uint16_t * token_len) {
+    uint16_t headerLen = PACKET_MAGIC_LENGTH;
+    headerLen = headerLen + 1 + (uint16_t)payload[headerLen];
+    *token_len = (uint16_t)payload[headerLen];
+    memcpy(token, payload + headerLen + 1, *token_len);
+}
+
 void givelink_raw_set_magic(uint8_t * payload) {
     memcpy(payload, (uint8_t *)GLP0, PACKET_MAGIC_LENGTH);
 }
