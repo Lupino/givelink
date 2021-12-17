@@ -185,7 +185,7 @@ uint16_t givelink_raw_get_id(const uint8_t * payload) {
 void givelink_raw_get_key(const uint8_t * payload, uint8_t * key, uint16_t * key_len) {
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
     *key_len = (uint16_t)payload[headerLen];
-    memcpy(key, payload + headerLen, *key_len);
+    memcpy(key, payload + headerLen + 1, *key_len);
 }
 
 void givelink_raw_set_magic(uint8_t * payload) {
