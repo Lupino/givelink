@@ -31,7 +31,7 @@ typedef struct {
     bool authed;
 } givelink_context_t;
 
-void givelink_init(givelink_t * m, uint8_t *data);
+void givelink_init(givelink_t * m);
 void givelink_reset();
 void givelink_set_id(const uint16_t id);
 void givelink_set_type(const uint8_t type);

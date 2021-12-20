@@ -139,8 +139,7 @@ bool givelink_from_binary(const uint8_t * payload,
     gl_obj -> type = payload[header_length + 6];
 
     if (gl_obj -> length > PACKET_TYPE_LENGTH) {
-        memcpy(gl_obj->data, payload + header_length + MINI_PACKET_LENGTH,
-                length - header_length - MINI_PACKET_LENGTH);
+        gl_obj->data = (uint8_t *) payload + header_length + MINI_PACKET_LENGTH;
     }
 
     gl_obj -> data[gl_obj -> length - PACKET_TYPE_LENGTH] = '\0';
@@ -175,13 +174,13 @@ uint16_t givelink_get_data_length() {
     return gl_obj->length - PACKET_TYPE_LENGTH;
 }
 
-void givelink_init(givelink_t * m, uint8_t *data) {
+void givelink_init(givelink_t * m) {
     gl_obj = m;
     gl_obj->id = 0;
     gl_obj->length = PACKET_TYPE_LENGTH;
     gl_obj->crc16 = 0;
     gl_obj->type = PING;
-    gl_obj->data = data;
+    gl_obj->data = NULL;
 }
 
 void givelink_reset() {
@@ -189,7 +188,7 @@ void givelink_reset() {
     gl_obj -> length = PACKET_TYPE_LENGTH;
     gl_obj -> crc16 = 0;
     gl_obj -> type = PING;
-    gl_obj -> data[0] = '\0';
+    gl_obj -> data = NULL;
 }
 
 void givelink_set_id(const uint16_t id) {
@@ -201,7 +200,7 @@ void givelink_set_type(const uint8_t type) {
 }
 
 void givelink_set_data(const uint8_t * data, const uint16_t length) {
-    memcpy(gl_obj->data, data, length);
+    gl_obj->data = (uint8_t *)data;
     givelink_set_data_length(length);
 }
 
