@@ -68,7 +68,9 @@ bool givelink_raw_recv(uint8_t * payload, uint16_t * length, const uint8_t c) {
 
 void givelink_raw_set_key(uint8_t * payload, const uint8_t * key, const uint16_t key_len) {
     payload[PACKET_MAGIC_LENGTH] = (const uint8_t)key_len;
-    memcpy(payload + PACKET_MAGIC_LENGTH + 1, key, key_len);
+    if (key_len > 0) {
+        memcpy(payload + PACKET_MAGIC_LENGTH + 1, key, key_len);
+    }
 }
 
 void givelink_raw_set_token(uint8_t * payload, const uint8_t * token, const uint16_t token_len) {
@@ -185,7 +187,9 @@ uint16_t givelink_raw_get_id(const uint8_t * payload) {
 void givelink_raw_get_key(const uint8_t * payload, uint8_t * key, uint16_t * key_len) {
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
     *key_len = (uint16_t)payload[headerLen];
-    memcpy(key, payload + headerLen + 1, *key_len);
+    if (*key_len > 0) {
+        memcpy(key, payload + headerLen + 1, *key_len);
+    }
 }
 
 
@@ -193,7 +197,9 @@ void givelink_raw_get_token(const uint8_t * payload, uint8_t * token, uint16_t *
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
     headerLen = headerLen + 1 + (uint16_t)payload[headerLen];
     *token_len = (uint16_t)payload[headerLen];
-    memcpy(token, payload + headerLen + 1, *token_len);
+    if (*token_len > 0) {
+        memcpy(token, payload + headerLen + 1, *token_len);
+    }
 }
 
 void givelink_raw_set_magic(uint8_t * payload) {
