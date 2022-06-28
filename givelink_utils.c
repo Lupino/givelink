@@ -1,7 +1,7 @@
 #include "givelink_raw.h"
 #include "givelink_utils.h"
 
-void gen_packet(
+void gen_packet_raw(
         uint8_t * pkt,
         const uint8_t * key, const uint16_t keyLen,
         const uint8_t * token, const uint16_t tokenLen,
@@ -22,7 +22,7 @@ void gen_packet_no_data(
         const uint8_t * key, const uint16_t keyLen,
         const uint8_t * token, const uint16_t tokenLen,
         const uint16_t id, const uint8_t tp) {
-    gen_packet(pkt, key, keyLen, token, tokenLen, id, tp, NULL, 0);
+    gen_packet_raw(pkt, key, keyLen, token, tokenLen, id, tp, NULL, 0);
 }
 
 void gen_packet_with_addr(
@@ -30,7 +30,7 @@ void gen_packet_with_addr(
         const uint8_t * addr,
         const uint16_t id, const uint8_t tp,
         const uint8_t * data, const uint16_t dataLen) {
-    gen_packet(pkt, addr, PACKET_ADDR_LENGTH, NULL, 0, id, tp, data, dataLen);
+    gen_packet_raw(pkt, addr, PACKET_ADDR_LENGTH, NULL, 0, id, tp, data, dataLen);
 }
 
 void gen_packet_with_addr_no_data(

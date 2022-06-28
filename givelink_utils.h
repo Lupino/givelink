@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-void gen_packet(
+void gen_packet_raw(
         uint8_t * pkt,
         const uint8_t * key, const uint16_t keyLen,
         const uint8_t * token, const uint16_t tokenLen,
