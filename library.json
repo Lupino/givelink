@@ -1,5 +1,5 @@
 {
-    "name": "Givelink",
+    "name": "givelink",
     "description": "Givelink packet library",
     "keywords": "givelink tcp udp packet",
     "authors": [
@@ -11,12 +11,11 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/Lupino/Givelink"
+        "url": "https://github.com/Lupino/givelink"
     },
-    "version": "1.0.1",
-    "homepage": "https://github.com/Lupino/Givelink",
+    "version": "2.0.0",
+    "homepage": "https://github.com/Lupino/givelink",
     "frameworks": "Arduino",
     "examples": [
-        "examples/*/*.ino"
     ]
 }
