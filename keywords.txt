@@ -6,50 +6,65 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-givelink_t	       KEYWORD1
-givelink_context_t KEYWORD1
-
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-givelink_init              KEYWORD2
-givelink_reset             KEYWORD2
-givelink_set_id            KEYWORD2
-givelink_set_type          KEYWORD2
-givelink_set_data          KEYWORD2
-givelink_set_data_length   KEYWORD2
-givelink_get_data_length   KEYWORD2
-givelink_to_binary         KEYWORD2
-givelink_from_binary       KEYWORD2
-givelink_get_length        KEYWORD2
-givelink_recv              KEYWORD2
-givelink_context_authed    KEYWORD2
-givelink_context_set_auth  KEYWORD2
-givelink_context_init      KEYWORD2
-givelink_context_set_key   KEYWORD2
-givelink_context_set_token KEYWORD2
-givelink_context_set_addr  KEYWORD2
-givelink_crc16  KEYWORD2
+givelink_crc16               KEYWORD2
+givelink_touint16            KEYWORD2
+givelink_fromuint16          KEYWORD2
+givelink_discover_magic      KEYWORD2
+givelink_shift_data_raw      KEYWORD2
+givelink_shift_data          KEYWORD2
+givelink_is_broadcast        KEYWORD2
+
+givelink_raw_recv            KEYWORD2
+givelink_raw_set_key         KEYWORD2
+givelink_raw_set_token       KEYWORD2
+givelink_raw_set_id          KEYWORD2
+givelink_raw_set_type        KEYWORD2
+givelink_raw_set_data        KEYWORD2
+givelink_raw_set_crc16       KEYWORD2
+givelink_raw_get_length      KEYWORD2
+givelink_raw_get_type        KEYWORD2
+givelink_raw_get_data        KEYWORD2
+givelink_raw_get_id          KEYWORD2
+givelink_raw_get_key         KEYWORD2
+givelink_raw_get_token       KEYWORD2
+givelink_raw_set_magic       KEYWORD2
+gen_packet_raw               KEYWORD2
+gen_packet_no_data           KEYWORD2
+gen_packet_with_addr         KEYWORD2
+gen_packet_with_addr_no_data KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
-REQUEST   LITERAL1
-RESPONSE  LITERAL1
-ATTRIBUTE LITERAL1
-TELEMETRY LITERAL1
-PING      LITERAL1
-SUCCESS   LITERAL1
-ERROR     LITERAL1
-AUTHREQ   LITERAL1
-AUTHRES   LITERAL1
-TRNS      LITERAL1
-CTRLREQ   LITERAL1
-CTRLRES   LITERAL1
-CTRLREQ1  LITERAL1
-DROP      LITERAL1
+REQUEST                      LITERAL1
+RESPONSE                     LITERAL1
+ATTRIBUTE                    LITERAL1
+TELEMETRY                    LITERAL1
+PING                         LITERAL1
+SUCCESS                      LITERAL1
+ERROR                        LITERAL1
+AUTHREQ                      LITERAL1
+AUTHRES                      LITERAL1
+TRNS                         LITERAL1
+CTRLREQ                      LITERAL1
+CTRLRES                      LITERAL1
+CTRLREQ1                     LITERAL1
+DROP                         LITERAL1
+SWITCH                       LITERAL1
+SWITCHBEAT                   LITERAL1
+SYNCTIME                     LITERAL1
+GETSETTOKEN                  LITERAL1
 
-MAGIC_LENGTH       LITERAL1
-TYPE_LENGTH        LITERAL1
-MINI_PACKET_LENGTH LITERAL1
-GLP0               LITERAL1
+MINI_RAW_PACKET_LENGTH       LITERAL1
+PACKET_MAGIC_LENGTH          LITERAL1
+PACKET_TYPE_LENGTH           LITERAL1
+PACKET_ID_LENGTH             LITERAL1
+PACKET_CRC_LENGTH            LITERAL1
+PACKET_LENGTH_LENGTH         LITERAL1
+PACKET_ADDR_LENGTH           LITERAL1
+PACKET_BROADCAST_HEAD_LENGTH LITERAL1
+INIT_CRC                     LITERAL1
+GLP0                         LITERAL1
