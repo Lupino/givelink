@@ -44,8 +44,8 @@ extern "C" {
 
 uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes, const uint16_t init_crc);
 
-uint16_t givelink_touint16(const uint8_t h, const uint8_t l);
-void givelink_fromuint16(const uint16_t src, uint8_t *h, uint8_t *l);
+uint16_t givelink_bin2uint16(const uint8_t h, const uint8_t l);
+void givelink_uint2bin16(const uint16_t src, uint8_t *h, uint8_t *l);
 bool givelink_discover_magic(const uint8_t * payload, const uint16_t length);
 void givelink_shift_data_raw(uint8_t * payload, const uint16_t length);
 void givelink_shift_data(uint8_t * payload, uint16_t * length);

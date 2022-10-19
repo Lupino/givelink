@@ -21,14 +21,14 @@ uint16_t givelink_raw_get_header_length(const uint8_t * payload, const uint16_t 
 
 uint16_t givelink_raw_get_data_length0(const uint8_t * payload, const uint16_t headerLen) {
     const uint16_t pos = headerLen - PACKET_CRC_LENGTH - PACKET_LENGTH_LENGTH;
-    return givelink_touint16(payload[pos], payload[pos+1]);
+    return givelink_bin2uint16(payload[pos], payload[pos+1]);
 }
 
 bool givelink_raw_check_crc16(uint8_t * payload, const uint16_t length, const uint16_t headerLen) {
     const uint16_t pos = headerLen - PACKET_CRC_LENGTH;
     const uint8_t crch = payload[pos];
     const uint8_t crcl = payload[pos+1];
-    const uint16_t crc0 = givelink_touint16(crch, crcl);
+    const uint16_t crc0 = givelink_bin2uint16(crch, crcl);
 
     payload[pos] = 0x00;
     payload[pos+1] = 0x00;
@@ -90,7 +90,7 @@ void givelink_raw_set_id(uint8_t * payload, const uint16_t id) {
     uint8_t h;
     uint8_t l;
 
-    givelink_fromuint16(id, &h, &l);
+    givelink_uint2bin16(id, &h, &l);
 
     payload[headerLen]     = h;
     payload[headerLen + 1] = l;
@@ -113,7 +113,7 @@ void givelink_raw_set_data(uint8_t * payload, const uint8_t * data, const uint16
     uint8_t h;
     uint8_t l;
 
-    givelink_fromuint16(length + 1, &h, &l);
+    givelink_uint2bin16(length + 1, &h, &l);
 
     payload[headerLen]     = h;
     payload[headerLen + 1] = l;
@@ -130,7 +130,7 @@ uint16_t givelink_raw_get_length(const uint8_t * payload) {
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen]; // + keyLen
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen]; // + tokenLen
     headerLen = headerLen + PACKET_ID_LENGTH; // + idLen
-    headerLen = headerLen + givelink_touint16(payload[headerLen], payload[headerLen+1]); // dataLen
+    headerLen = headerLen + givelink_bin2uint16(payload[headerLen], payload[headerLen+1]); // dataLen
     headerLen = headerLen + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH;
     return headerLen;
 }
@@ -147,7 +147,7 @@ void givelink_raw_set_crc16(uint8_t * payload) {
     uint8_t h;
     uint8_t l;
 
-    givelink_fromuint16(crc, &h, &l);
+    givelink_uint2bin16(crc, &h, &l);
 
     payload[pos]     = h;
     payload[pos + 1] = l;
@@ -167,7 +167,7 @@ void givelink_raw_get_data(const uint8_t * payload, uint8_t * data, uint16_t *da
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen]; // + tokenLen
     headerLen = headerLen + PACKET_ID_LENGTH;
 
-    *dataLen = givelink_touint16(payload[headerLen], payload[headerLen+1]) - 1;
+    *dataLen = givelink_bin2uint16(payload[headerLen], payload[headerLen+1]) - 1;
 
     headerLen = headerLen + PACKET_LENGTH_LENGTH + PACKET_CRC_LENGTH + PACKET_TYPE_LENGTH;
 
@@ -180,7 +180,7 @@ uint16_t givelink_raw_get_id(const uint8_t * payload) {
     uint16_t headerLen = PACKET_MAGIC_LENGTH;
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen]; // + keyLen
     headerLen = headerLen + 1 + (const uint16_t)payload[headerLen]; // + tokenLen
-    return givelink_touint16(payload[headerLen], payload[headerLen+1]);
+    return givelink_bin2uint16(payload[headerLen], payload[headerLen+1]);
 }
 
 

@@ -112,11 +112,11 @@ uint16_t givelink_crc16(const uint8_t *input_str, const size_t num_bytes, const 
 }  /* givelink_crc16 */
 
 
-uint16_t givelink_touint16(const uint8_t h, const uint8_t l) {
+uint16_t givelink_bin2uint16(const uint8_t h, const uint8_t l) {
     return ((h << 8) & 0xff00) + (l & 0xff);
 }
 
-void givelink_fromuint16(const uint16_t src, uint8_t *h, uint8_t *l) {
+void givelink_uint2bin16(const uint16_t src, uint8_t *h, uint8_t *l) {
     *h = (uint8_t)(src >> 8);
     *l = (uint8_t)src;
 }

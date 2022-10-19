@@ -10,8 +10,8 @@
 # Methods and Functions (KEYWORD2)
 #######################################
 givelink_crc16               KEYWORD2
-givelink_touint16            KEYWORD2
-givelink_fromuint16          KEYWORD2
+givelink_bin2uint16          KEYWORD2
+givelink_uint2bin16          KEYWORD2
 givelink_discover_magic      KEYWORD2
 givelink_shift_data_raw      KEYWORD2
 givelink_shift_data          KEYWORD2
