@@ -27,6 +27,8 @@ extern "C" {
 #define SWITCHBEAT  16
 #define SYNCTIME    17
 #define GETSETTOKEN 18
+#define REQUEST1    19
+#define RESPONSE1   20
 
 #define PACKET_MAGIC_LENGTH 4
 #define PACKET_TYPE_LENGTH 1
